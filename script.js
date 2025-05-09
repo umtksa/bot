@@ -5,6 +5,7 @@ let licensePlates = {};
 const defaultResponses = [
     "Üzgünüm, anlayamadım.",
     "Bu konuda bir bilgim yok.",
+    "Hiç bir fikrim yok!",
     "Tam olarak ne dediğini anlamadım."
 ];
 
@@ -163,14 +164,14 @@ function getBotResponse(userInput) {
     if (["nasılsın", "naber", "nasıl gidiyor"].some(word => lowerInput.includes(word))) {
         return "İyiyim, sorduğunuz için teşekkürler!";
     }
-    if (["teşekkür ederim", "teşekkürler", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
+    if (["teşekkür ederim", "teşekkürler", "tenks", "thanks", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
         return "Rica ederim!";
     }
     if (["mal mısın", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
-        return "Bir iki regex olayım baya gerizekalıyım";
+        return "oldukça gerizekalıyım";
     }
-     if (["görüşürüz", "hoşça kal", "bay bay", "bye"].some(word => lowerInput.includes(word))) {
-        return "Görüşmek üzere! Hoşça kalın.";
+     if (["görüşürüz", "hoşçakal", "bay bay", "siyu", "see you", "bye"].some(word => lowerInput.includes(word))) {
+        return "Görüşmek üzere!";
     }
     if (lowerInput === "saat kaç" || lowerInput === "saat") {
     const now = new Date();
