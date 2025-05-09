@@ -170,12 +170,13 @@ function getBotResponse(userInput) {
         return "Görüşmek üzere! Hoşça kalın.";
     }
     if (lowerInput === "saat kaç" || lowerInput === "saat") {
-        const now = new Date();
-        return `Şu an saat: ${now.toLocaleTimeString('tr-TR')}`;
+    const now = new Date();
+    // Saniyeyi gizlemek için seçenekler objesi kullanılır
+    return `Şu an saat: ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     }
     if (lowerInput === "bugün ne gün" || lowerInput === "bugünün tarihi ne" || lowerInput === "tarih ne") {
         const now = new Date();
-        return `Bugün: ${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        return `${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     }
 
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
