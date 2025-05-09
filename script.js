@@ -166,6 +166,9 @@ function getBotResponse(userInput) {
     if (["teşekkür ederim", "teşekkürler", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
         return "Rica ederim!";
     }
+    if (["mal mısın", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
+        return "Bir iki regex olayım baya gerizekalıyım";
+    }
      if (["görüşürüz", "hoşça kal", "bay bay", "bye"].some(word => lowerInput.includes(word))) {
         return "Görüşmek üzere! Hoşça kalın.";
     }
