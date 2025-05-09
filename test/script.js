@@ -184,7 +184,7 @@ function getBotResponse(userInput) {
         cityForPlateRaw = plateMatch[1].trim(); // Yakalanan grup temizlenmiş olacak
         const lookupKey = getLookupKey(cityForPlateRaw); // Arama anahtarını oluştur
         if (licensePlates[lookupKey]) {
-            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plaka kodu: ${licensePlates[lookupKey]}`;
+            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${licensePlates[lookupKey]}`;
         }
     }
     // Basit plaka sorgusu (eğer karmaşık olan eşleşmediyse ve temizlenmiş giriş üzerinde çalış)
@@ -193,7 +193,7 @@ function getBotResponse(userInput) {
          cityForPlateRaw = simplePlateMatch[1].trim();
          const lookupKey = getLookupKey(cityForPlateRaw); // Arama anahtarını oluştur
          if (licensePlates[lookupKey]) {
-            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plaksı ${licensePlates[lookupKey]}`;
+            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${licensePlates[lookupKey]}`;
         }
     }
 
@@ -220,7 +220,7 @@ function getBotResponse(userInput) {
     // "Merhaba canım benim" -> lowerInput kullanılır, "canım benim" temizlenmez.
     // "Merhaba" kelimesi içeriliyor mu diye bakılır.
     if (["merhaba", "selam", "selamlar", "hey", "günaydın", "iyi günler", "iyi akşamlar", "iyi geceler"].some(word => lowerInput.includes(word) || lowerInput === word )) {
-        return "Merhaba! Size nasıl yardımcı olabilirim?";
+        return "Merhaba! Nasıl yardımcı olabilirim?";
     }
     if (["nasılsın", "naber", "nasıl gidiyor"].some(word => lowerInput.includes(word))) {
         return "İyiyim, sorduğunuz için teşekkürler!";
@@ -229,10 +229,10 @@ function getBotResponse(userInput) {
         return "Rica ederim!";
     }
     if (["adın ne", "kimsin", "ismin"].some(word => lowerInput.includes(word))) {
-        return "adım ahraz."; // Botunuzun adı
+        return "Adım ahraz."; // Botunuzun adı
     }
     // Sakıncalı ifadeler (Orijinal girişte kontrol etmek uygun)
-    if (["mal mısın", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
+    if (["mal", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
         return "oldukça gerizekalıyım"; // Botunuzun cevabı
     }
      if (["görüşürüz", "hoşçakal", "bay bay", "siyu", "see you", "bye"].some(word => lowerInput.includes(word))) {
@@ -245,14 +245,14 @@ function getBotResponse(userInput) {
     if (cleanedLowerInput === "saat" || cleanedLowerInput === "zaman") {
         const now = new Date();
         // toLocaleTimeString zaten bölgesel formatı kullanır, saniyeyi kapatmak için seçenek ekledik
-        return `Şu an saat: ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+        return `${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     }
     // "Bugünün tarihi ne" temizlenince "bugünün tarihi" kalır
     // "Tarih ne" temizlenince "tarih" kalır
     if (cleanedLowerInput === "bugün" || cleanedLowerInput === "bugünün tarihi" || cleanedLowerInput === "tarih") {
         const now = new Date();
          // toLocaleDateString tarih formatını ayarlar
-        return `Bugün: ${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        return `${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     }
 
 
