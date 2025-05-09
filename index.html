@@ -2,7 +2,12 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Bot">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <title>bot</title>
     <style>
         html {
@@ -18,6 +23,8 @@
             justify-content: center;
             align-items: center;
             height: 100%;
+            /* iOS'ta kaydırma sırasında oluşabilecek zıplamayı engellemek için */
+            overscroll-behavior-y: contain;
         }
 
         .chat-container {
@@ -33,16 +40,13 @@
             overflow: hidden;
         }
 
-        /* .chat-header stilleri kaldırıldı */
-
         .chat-messages {
             flex-grow: 1;
             padding: 15px;
             overflow-y: auto;
-            border-bottom: 1px solid #eee; /* Alt kenarlık kalabilir */
+            border-bottom: 1px solid #eee;
             display: flex;
             flex-direction: column;
-            /* Masaüstü için üst köşe yuvarlaklıkları, .chat-container ile uyumlu */
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
         }
@@ -84,6 +88,8 @@
             border-radius: 20px;
             margin-right: 10px;
             outline: none;
+            /* iOS'ta input odaklandığında otomatik zoom'u engellemeye yardımcı olabilir */
+            font-size: 16px; /* Genellikle 16px ve üzeri zoom'u tetiklemez */
         }
 
         .chat-input button {
@@ -103,19 +109,15 @@
         @media (max-width: 768px) {
             .chat-container {
                 width: 100%;
-                height: 100%;
+                height: 100%; /* Tam ekran için */
                 max-width: none;
-                max-height: none;
+                max-height: none; /* Tam ekran için */
                 margin: 0;
                 border-radius: 0;
                 box-shadow: none;
             }
 
-            /* .chat-header ile ilgili mobil stiller kaldırıldı */
-
             .chat-messages {
-                /* Mobil tam ekranda .chat-container'ın radius'u 0 olduğu için,
-                   bunun da üst radius'ları 0 olmalı */
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
             }
@@ -130,8 +132,7 @@
         </div>
         <div class="chat-input">
             <input type="text" id="userInput" placeholder="Mesajınızı yazın..." autofocus>
-            <button onclick="sendMessage()">send</button>
-        </div>
+            <button onclick="sendMessage()">Gönder</button> </div>
     </div>
 
     <script src="script.js" defer></script>
