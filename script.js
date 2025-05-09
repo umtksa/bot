@@ -228,11 +228,11 @@ function sendMessage() {
     userInputElement.value = '';
     userInputElement.focus();
 
-    // Botun cevabını hemen göster
+    // Botun cevabını biraz gecikmeli vererek daha doğal bir his oluştur
     setTimeout(() => {
         const botReply = getBotResponse(messageText);
         displayMessage(botReply, 'bot');
-    }, 0); // Gecikmeyi 0 milisaniyeye düşürdük
+    }, 500 + Math.random() * 300); // Rastgele küçük bir gecikme ekle
 }
 
 document.addEventListener('DOMContentLoaded', loadDataAndInitialize);
