@@ -1,0 +1,34 @@
+{
+  "capitals": {
+    "türkiye": "Ankara", 
+    "almanya": "Berlin", 
+    "fransa": "Paris",
+    "japonya": "Tokyo",
+    "amerika": "Washington D.C.",
+    "ingiltere": "Londra",
+    "italya": "Roma",
+    "ispanya": "Madrid",
+    "rusya": "Moskova",
+    "çin": "Pekin",
+    "azerbaycan": "Bakü"
+  },
+  "licensePlates": {
+    "adana": "01", "adiyaman": "02", "afyonkarahisar": "03", "ağri": "04", "amasya": "05",
+    "ankara": "06", "antalya": "07", "artvin": "08", "aydin": "09", "balikesir": "10",
+    "bilecik": "11", "bingöl": "12", "bitlis": "13", "bolu": "14", "burdur": "15",
+    "bursa": "16", "çanakkale": "17", "çankiri": "18", "çorum": "19", "denizli": "20",
+    "diyarbakir": "21", "edirne": "22", "elaziğ": "23", "erzincan": "24", "erzurum": "25",
+    "eskişehir": "26", "gaziantep": "27", "giresun": "28", "gümüşhane": "29", "hakkari": "30",
+    "hatay": "31", "isparta": "32", "mersin": "33", "istanbul": "34", "izmir": "35",
+    "kars": "36", "kastamonu": "37", "kayseri": "38", "kirklareli": "39", "kirşehir": "40",
+    "kocaeli": "41", "konya": "42", "kütahya": "43", "malatya": "44", "manisa": "45",
+    "kahramanmaraş": "46", "mardin": "47", "muğla": "48", "muş": "49", "nevşehir": "50",
+    "niğde": "51", "ordu": "52", "rize": "53", "sakarya": "54", "samsun": "55",
+    "siirt": "56", "sinop": "57", "sivas": "58", "tekirdağ": "59", "tokat": "60",
+    "trabzon": "61", "tunceli": "62", "şanliurfa": "63", "uşak": "64", "van": "65",
+    "yozgat": "66", "zonguldak": "67", "aksaray": "68", "bayburt": "69", "karaman": "70",
+    "kirikkale": "71", "batman": "72", "şirnak": "73", "bartin": "74", "ardahan": "75",
+    "iğdir": "76", "yalova": "77", "karabük": "78", "kilis": "79", "osmaniye": "80",
+    "düzce": "81"
+  }
+}
