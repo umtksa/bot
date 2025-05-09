@@ -11,7 +11,7 @@ const defaultResponses = [
 
 // Temizlenecek (yok sayılacak) kelimeler - Bu listeyi ihtiyaca göre genişletebilirsiniz.
 const wordsToIgnore = [
-    "kimdir", "nedir", "kaçtır", "ne", "kaç", "canım", "benim", "lütfen",
+    "kimdir", "nedir", "kaçtır", "ne", "kaç", "neresi", "neresidir", "canım", "benim", "lütfen",
     "acaba", "bir", "bi", "mi", "mı", "mu", "mü", "misin", "mısın", "musun", "müsün",
     "mıdır", "midir", "mudur", "müdür", "acaba", "ki"
 ];
