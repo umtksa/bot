@@ -2,7 +2,6 @@
 let capitals = {};
 let licensePlates = {};
 
-// Bu sabit kalabilir veya JSON'a taşınabilir. Şimdilik burada bırakalım.
 const defaultResponses = [
     "Üzgünüm, bunu anlayamadım. Lütfen farklı bir şekilde sormayı deneyin.",
     "Bu konuda bir bilgim yok maalesef.",
@@ -14,6 +13,15 @@ const chatMessagesContainer = document.getElementById('chatMessages');
 const userInputElement = document.getElementById('userInput');
 const sendButton = document.querySelector('.chat-input button');
 
+// ARAMA ANAHTARI OLUŞTURMA FONKSİYONU
+// Türkçe'ye uygun küçük harfe çevirir ve 'ı' ile 'i' harflerini birleştirir (tümünü 'i' yapar).
+// Diğer Türkçe karakterleri (ö, ü, ş, ç, ğ) korur.
+function getLookupKey(text) {
+    if (typeof text !== 'string') return '';
+    let key = text.toLocaleLowerCase('tr-TR'); // Türkçe'ye özgü doğru küçük harf dönüşümü
+    key = key.replace(/ı/g, 'i'); // Tüm 'ı' harflerini 'i' harfine çevir
+    return key;
+}
 
 // --- VERİ YÜKLEME VE BAŞLATMA ---
 async function loadDataAndInitialize() {
@@ -26,34 +34,31 @@ async function loadDataAndInitialize() {
     }
 
     try {
-        const response = await fetch('data.json'); // JSON dosyasının yolu
+        const response = await fetch('data.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
 
-        // data.json'dan yüklenen anahtarları normalize et
         const rawCapitals = data.capitals;
-        capitals = {}; // Yeniden başlat
+        capitals = {};
         for (const key in rawCapitals) {
             if (Object.prototype.hasOwnProperty.call(rawCapitals, key)) {
-                capitals[normalizeText(key)] = rawCapitals[key];
+                capitals[getLookupKey(key)] = rawCapitals[key]; // Anahtarları normalize et
             }
         }
 
         const rawLicensePlates = data.licensePlates;
-        licensePlates = {}; // Yeniden başlat
+        licensePlates = {};
         for (const key in rawLicensePlates) {
             if (Object.prototype.hasOwnProperty.call(rawLicensePlates, key)) {
-                licensePlates[normalizeText(key)] = rawLicensePlates[key];
+                licensePlates[getLookupKey(key)] = rawLicensePlates[key]; // Anahtarları normalize et
             }
         }
 
-        console.log("Veriler başarıyla yüklendi ve anahtarlar normalleştirildi.");
-        // İsteğe bağlı: Normalleştirilmiş verileri kontrol etmek için
-        // console.log("Normalleştirilmiş Plakalar:", licensePlates);
-        // console.log("Normalleştirilmiş Başkentler:", capitals);
-
+        console.log("Veriler başarıyla yüklendi ve arama anahtarları oluşturuldu.");
+        // console.log("İşlenmiş Plakalar:", licensePlates);
+        // console.log("İşlenmiş Başkentler:", capitals);
 
         if (userInputElement) {
             userInputElement.disabled = false;
@@ -76,22 +81,19 @@ async function loadDataAndInitialize() {
 // --- BOT MANTIĞI ---
 function getBotResponse(userInput) {
     if (Object.keys(capitals).length === 0 && Object.keys(licensePlates).length === 0) {
-        // Veriler yüklenememişse veya henüz yükleniyorsa bu kontrol önemli.
-        // loadDataAndInitialize'daki placeholder'ı beklemek daha iyi olabilir,
-        // ama bir güvenlik katmanı olarak kalabilir.
         const placeholderText = userInputElement ? userInputElement.placeholder : "";
         if (placeholderText === "Veriler yükleniyor..." || placeholderText === "Bot kullanılamıyor.") {
              return "Veriler henüz hazır değil, lütfen biraz bekleyin.";
         }
     }
 
-
-    const lowerInput = userInput.toLowerCase().trim();
-    let cityForPlate = "";
-    let countryForCapital = "";
+    // Genel komutlar için kullanıcı girdisini Türkçe'ye uygun küçük harfe çevir
+    const lowerInput = userInput.toLocaleLowerCase('tr-TR').trim();
+    let cityForPlateRaw = ""; // Regex'ten yakalanan orijinal şehir adı
+    let countryForCapitalRaw = ""; // Regex'ten yakalanan orijinal ülke adı
 
     // 1. Basit Matematik İşlemleri
-    const mathMatch = lowerInput.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/); // Ondalıklı sayıları da destekler
+    const mathMatch = lowerInput.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/);
     if (mathMatch) {
         const num1 = parseFloat(mathMatch[1]);
         const operator = mathMatch[3];
@@ -105,44 +107,44 @@ function getBotResponse(userInput) {
                 if (num2 === 0) return "Sıfıra bölme hatası!";
                 result = num1 / num2;
                 break;
-            default: return "Geçersiz matematik operatörü."; // Bu durum regex ile yakalanmamalı
+            default: return "Geçersiz matematik operatörü.";
         }
         return `${num1} ${operator} ${num2} = ${result}`;
     }
 
     // 2. Plaka Kodu Sorgulama
-    // Örnek: "izmirin plakası nedir", "izmir plaka kodu", "izmir plakası"
     const plateMatch = lowerInput.match(/(.+?)\s*(?:ilinin|'nin|nin| İli)?\s*(plakas(?:ı|i)|plaka kodu)\s*(?:nedir|kaç(?:tır)?)?\??$/i);
     if (plateMatch) {
-        cityForPlate = normalizeText(plateMatch[1].trim());
-        if (licensePlates[cityForPlate]) {
-            return `${capitalizeFirstLetter(plateMatch[1].trim())} ilinin plaka kodu: ${licensePlates[cityForPlate]}`;
+        cityForPlateRaw = plateMatch[1].trim();
+        const lookupKey = getLookupKey(cityForPlateRaw);
+        if (licensePlates[lookupKey]) {
+            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plaka kodu: ${licensePlates[lookupKey]}`;
         }
     }
-    // Örnek: "izmir plaka"
     const simplePlateMatch = lowerInput.match(/^(.+?)\s+plaka\s*\??$/i);
-     if (simplePlateMatch && !cityForPlate) { // Eğer önceki regex yakalamadıysa
-         cityForPlate = normalizeText(simplePlateMatch[1].trim());
-         if (licensePlates[cityForPlate]) {
-            return `${capitalizeFirstLetter(simplePlateMatch[1].trim())} ilinin plaka kodu: ${licensePlates[cityForPlate]}`;
+     if (simplePlateMatch && !cityForPlateRaw) {
+         cityForPlateRaw = simplePlateMatch[1].trim();
+         const lookupKey = getLookupKey(cityForPlateRaw);
+         if (licensePlates[lookupKey]) {
+            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plaka kodu: ${licensePlates[lookupKey]}`;
         }
     }
 
     // 3. Başkent Sorgulama
-    // Örnek: "türkiye'nin başkenti nedir", "almanya başkenti"
     const capitalMatch = lowerInput.match(/(.+?)\s*(?:ülkesinin|'nin|nin)?\s*başkenti\s*(?:nedir|neresidir|hangisidir)?\??$/i);
     if (capitalMatch) {
-        countryForCapital = normalizeText(capitalMatch[1].trim());
-         if (capitals[countryForCapital]) {
-            return `${capitalizeFirstLetter(capitalMatch[1].trim())}'nin başkenti ${capitals[countryForCapital]}.`;
+        countryForCapitalRaw = capitalMatch[1].trim();
+        const lookupKey = getLookupKey(countryForCapitalRaw);
+         if (capitals[lookupKey]) {
+            return `${capitalizeFirstLetter(countryForCapitalRaw)}'nin başkenti ${capitals[lookupKey]}.`;
         }
     }
-    // Örnek: "japonya başkent" (daha basit sorgu)
     const simpleCapitalMatch = lowerInput.match(/^(.+?)\s+başkent\s*\??$/i);
-     if (simpleCapitalMatch && !countryForCapital) { // Eğer önceki regex yakalamadıysa
-         countryForCapital = normalizeText(simpleCapitalMatch[1].trim());
-         if (capitals[countryForCapital]) {
-            return `${capitalizeFirstLetter(simpleCapitalMatch[1].trim())}'nin başkenti ${capitals[countryForCapital]}.`;
+     if (simpleCapitalMatch && !countryForCapitalRaw) {
+         countryForCapitalRaw = simpleCapitalMatch[1].trim();
+         const lookupKey = getLookupKey(countryForCapitalRaw);
+         if (capitals[lookupKey]) {
+            return `${capitalizeFirstLetter(countryForCapitalRaw)}'nin başkenti ${capitals[lookupKey]}.`;
         }
     }
 
@@ -163,37 +165,26 @@ function getBotResponse(userInput) {
         const now = new Date();
         return `Şu an saat: ${now.toLocaleTimeString('tr-TR')}`;
     }
-     if (lowerInput === "bugün ne gün" || lowerInput === "bugünün tarihi ne" || lowerInput === "tarih ne") {
+    if (lowerInput === "bugün ne gün" || lowerInput === "bugünün tarihi ne" || lowerInput === "tarih ne") {
         const now = new Date();
         return `Bugün: ${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     }
 
-
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
-// Türkçe karakterleri normalleştirme ve küçük harfe çevirme
-function normalizeText(text) {
-    if (typeof text !== 'string') return ''; // Güvenlik önlemi
-    return text.toLowerCase()
-        .replace(/ı/g, 'i')
-        .replace(/ğ/g, 'g')
-        .replace(/ü/g, 'u')
-        .replace(/ş/g, 's')
-        .replace(/ö/g, 'o')
-        .replace(/ç/g, 'c');
-}
 
 function capitalizeFirstLetter(string) {
     if (!string) return string;
-    // Kelime kelime baş harf büyütme (örneğin "KAHRAMANMARAŞ" -> "Kahramanmaraş")
-    return string.toLowerCase().split(' ').map(word => {
+    return string.toLocaleLowerCase('tr-TR').split(' ').map(word => {
         if (word.length === 0) return '';
-        // Özel durum: 'i' harfi büyük harfe çevrilirken 'İ' olmalı
+        // 'i' harfi Türkçe'de büyük harfe çevrilirken 'İ' olmalı
+        // Diğer harfler için standart toUpperCase() yeterli olacaktır (toLocaleUpperCase('tr-TR') de kullanılabilir)
         if (word.startsWith('i')) {
             return 'İ' + word.slice(1);
         }
-        return word.charAt(0).toUpperCase() + word.slice(1);
+        // Kelimenin ilk harfini Türkçe'ye uygun büyük harfe çevir
+        return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1);
     }).join(' ');
 }
 
@@ -205,7 +196,6 @@ if (userInputElement) {
         }
     });
 }
-// Butona da event listener ekleyelim, HTML'deki onclick'e ek olarak
 if (sendButton && userInputElement) {
     sendButton.addEventListener('click', function() {
         if (!userInputElement.disabled) {
@@ -214,9 +204,8 @@ if (sendButton && userInputElement) {
     });
 }
 
-
 function displayMessage(text, sender) {
-    if (!chatMessagesContainer) return; // Element yoksa işlem yapma
+    if (!chatMessagesContainer) return;
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
     messageDiv.textContent = text;
@@ -228,20 +217,17 @@ function sendMessage() {
     if (!userInputElement || userInputElement.disabled) {
         return;
     }
-
     const messageText = userInputElement.value.trim();
     if (messageText === '') return;
 
     displayMessage(messageText, 'user');
     userInputElement.value = '';
-    userInputElement.focus(); // Gönderdikten sonra inputa tekrar odaklan
+    userInputElement.focus();
 
-    // Botun cevabını biraz gecikmeli vererek daha doğal bir his oluştur
     setTimeout(() => {
         const botReply = getBotResponse(messageText);
         displayMessage(botReply, 'bot');
-    }, 500 + Math.random() * 300); // Rastgele küçük bir gecikme ekle
+    }, 500 + Math.random() * 300);
 }
 
-// Sayfa yüklendiğinde verileri yükle ve botu başlat
 document.addEventListener('DOMContentLoaded', loadDataAndInitialize);
