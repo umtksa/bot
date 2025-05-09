@@ -161,10 +161,10 @@ function getBotResponse(userInput) {
         return "Merhaba! Size nasıl yardımcı olabilirim?";
     }
     if (["nasılsın", "naber", "nasıl gidiyor"].some(word => lowerInput.includes(word))) {
-        return "İyiyim, sorduğunuz için teşekkürler! Size nasıl yardımcı olabilirim?";
+        return "İyiyim, sorduğunuz için teşekkürler!";
     }
     if (["teşekkür ederim", "teşekkürler", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
-        return "Rica ederim! Başka bir sorunuz var mı?";
+        return "Rica ederim!";
     }
      if (["görüşürüz", "hoşça kal", "bay bay", "bye"].some(word => lowerInput.includes(word))) {
         return "Görüşmek üzere! Hoşça kalın.";
@@ -172,7 +172,7 @@ function getBotResponse(userInput) {
     if (lowerInput === "saat kaç" || lowerInput === "saat") {
     const now = new Date();
     // Saniyeyi gizlemek için seçenekler objesi kullanılır
-    return `Şu an saat: ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     }
     if (lowerInput === "bugün ne gün" || lowerInput === "bugünün tarihi ne" || lowerInput === "tarih ne") {
         const now = new Date();
