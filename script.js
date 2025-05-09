@@ -167,6 +167,9 @@ function getBotResponse(userInput) {
     if (["teşekkür ederim", "teşekkürler", "tenks", "thanks", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
         return "Rica ederim!";
     }
+    if (["adın ne", "ismin"].some(word => lowerInput.includes(word))) {
+        return "adım ahraz.";
+    }
     if (["mal mısın", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
         return "oldukça gerizekalıyım";
     }
