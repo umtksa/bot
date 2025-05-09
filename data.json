@@ -13,13 +13,13 @@
     "azerbaycan": "Bakü"
   },
   "licensePlates": {
-    "adana": "01", "adiyaman": "02", "afyonkarahisar": "03", "ağri": "04", "amasya": "05",
-    "ankara": "06", "antalya": "07", "artvin": "08", "aydin": "09", "balikesir": "10",
+    "adana": "01", "adiyaman": "02", "afyonkarahisar": "03", "AĞRI": "04", "amasya": "05",
+    "ankara": "06", "antalya": "07", "artvin": "08", "AYDIN": "09", "balikesir": "10",
     "bilecik": "11", "bingöl": "12", "bitlis": "13", "bolu": "14", "burdur": "15",
     "bursa": "16", "çanakkale": "17", "çankiri": "18", "çorum": "19", "denizli": "20",
     "diyarbakir": "21", "edirne": "22", "elaziğ": "23", "erzincan": "24", "erzurum": "25",
     "eskişehir": "26", "gaziantep": "27", "giresun": "28", "gümüşhane": "29", "hakkari": "30",
-    "hatay": "31", "isparta": "32", "mersin": "33", "istanbul": "34", "izmir": "35",
+    "hatay": "31", "isparta": "32", "mersin": "33", "İSTANBUL": "34", "İZMİR": "35",
     "kars": "36", "kastamonu": "37", "kayseri": "38", "kirklareli": "39", "kirşehir": "40",
     "kocaeli": "41", "konya": "42", "kütahya": "43", "malatya": "44", "manisa": "45",
     "kahramanmaraş": "46", "mardin": "47", "muğla": "48", "muş": "49", "nevşehir": "50",
