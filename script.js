@@ -178,7 +178,6 @@ function getBotResponse(userInput) {
     }
     if (lowerInput === "saat kaç" || lowerInput === "saat") {
     const now = new Date();
-    // Saniyeyi gizlemek için seçenekler objesi kullanılır
     return `${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     }
     if (lowerInput === "bugün ne gün" || lowerInput === "bugünün tarihi ne" || lowerInput === "tarih ne") {
