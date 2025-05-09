@@ -249,7 +249,7 @@ function getBotResponse(userInput) {
     }
     // "Bugünün tarihi ne" temizlenince "bugünün tarihi" kalır
     // "Tarih ne" temizlenince "tarih" kalır
-    if (cleanedLowerInput === "bugün ne gün" || cleanedLowerInput === "bugünün tarihi" || cleanedLowerInput === "tarih") {
+    if (cleanedLowerInput === "bugün" || cleanedLowerInput === "bugünün tarihi" || cleanedLowerInput === "tarih") {
         const now = new Date();
          // toLocaleDateString tarih formatını ayarlar
         return `Bugün: ${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
