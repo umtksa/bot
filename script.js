@@ -3,9 +3,9 @@ let capitals = {};
 let licensePlates = {};
 
 const defaultResponses = [
-    "Üzgünüm, bunu anlayamadım. Lütfen farklı bir şekilde sormayı deneyin.",
-    "Bu konuda bir bilgim yok maalesef.",
-    "Tam olarak ne demek istediğinizi çıkaramadım."
+    "Üzgünüm, anlayamadım.",
+    "Bu konuda bir bilgim yok.",
+    "Tam olarak ne dediğini anlamadım."
 ];
 
 // --- ARAYÜZ ELEMANLARI ---
@@ -14,12 +14,10 @@ const userInputElement = document.getElementById('userInput');
 const sendButton = document.querySelector('.chat-input button');
 
 // ARAMA ANAHTARI OLUŞTURMA FONKSİYONU
-// Türkçe'ye uygun küçük harfe çevirir ve 'ı' ile 'i' harflerini birleştirir (tümünü 'i' yapar).
-// Diğer Türkçe karakterleri (ö, ü, ş, ç, ğ) korur.
 function getLookupKey(text) {
     if (typeof text !== 'string') return '';
-    let key = text.toLocaleLowerCase('tr-TR'); // Türkçe'ye özgü doğru küçük harf dönüşümü
-    key = key.replace(/ı/g, 'i'); // Tüm 'ı' harflerini 'i' harfine çevir
+    let key = text.toLocaleLowerCase('tr-TR');
+    key = key.replace(/ı/g, 'i');
     return key;
 }
 
@@ -44,7 +42,7 @@ async function loadDataAndInitialize() {
         capitals = {};
         for (const key in rawCapitals) {
             if (Object.prototype.hasOwnProperty.call(rawCapitals, key)) {
-                capitals[getLookupKey(key)] = rawCapitals[key]; // Anahtarları normalize et
+                capitals[getLookupKey(key)] = rawCapitals[key];
             }
         }
 
@@ -52,14 +50,10 @@ async function loadDataAndInitialize() {
         licensePlates = {};
         for (const key in rawLicensePlates) {
             if (Object.prototype.hasOwnProperty.call(rawLicensePlates, key)) {
-                licensePlates[getLookupKey(key)] = rawLicensePlates[key]; // Anahtarları normalize et
+                licensePlates[getLookupKey(key)] = rawLicensePlates[key];
             }
         }
-
         console.log("Veriler başarıyla yüklendi ve arama anahtarları oluşturuldu.");
-        // console.log("İşlenmiş Plakalar:", licensePlates);
-        // console.log("İşlenmiş Başkentler:", capitals);
-
         if (userInputElement) {
             userInputElement.disabled = false;
             userInputElement.placeholder = "Mesajınızı yazın...";
@@ -68,7 +62,6 @@ async function loadDataAndInitialize() {
         if (sendButton) {
             sendButton.disabled = false;
         }
-
     } catch (error) {
         console.error("Veri yüklenirken hata oluştu:", error);
         displayMessage("Veri kaynakları yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.", "bot");
@@ -79,6 +72,20 @@ async function loadDataAndInitialize() {
 }
 
 // --- BOT MANTIĞI ---
+
+// İyelik eklerini ve ilişkili kelimeleri içeren regex desenleri
+// En uzun ve en spesifik olanlar başa gelecek şekilde sıralandı.
+const plateSuffixPattern = "(?:ilinin|şehrinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün|ili)";
+const capitalSuffixPattern = "(?:ülkesinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün)";
+
+// Regex'leri bir kere oluşturup tekrar kullanmak daha performanslı olabilir, ancak burada okunurluk için fonksiyon içinde bırakıyorum.
+// Veya global scope'ta tanımlayabilirsiniz:
+const plateRegex = new RegExp(`^(.+?)\\s*(?:${plateSuffixPattern})?\\s*(plakas(?:ı|i)|plaka kodu)\\s*(?:nedir|kaç(?:tır)?)?\\??$`, 'i');
+const capitalRegex = new RegExp(`^(.+?)\\s*(?:${capitalSuffixPattern})?\\s*başkenti\\s*(?:nedir|neresidir|hangisidir)?\\??$`, 'i');
+const simplePlateRegex = new RegExp(/^(.+?)\s+plaka\s*\??$/i); // Basit sorgu: "ankara plaka"
+const simpleCapitalRegex = new RegExp(/^(.+?)\s+başkent\s*\??$/i); // Basit sorgu: "türkiye başkent"
+
+
 function getBotResponse(userInput) {
     if (Object.keys(capitals).length === 0 && Object.keys(licensePlates).length === 0) {
         const placeholderText = userInputElement ? userInputElement.placeholder : "";
@@ -87,10 +94,9 @@ function getBotResponse(userInput) {
         }
     }
 
-    // Genel komutlar için kullanıcı girdisini Türkçe'ye uygun küçük harfe çevir
     const lowerInput = userInput.toLocaleLowerCase('tr-TR').trim();
-    let cityForPlateRaw = ""; // Regex'ten yakalanan orijinal şehir adı
-    let countryForCapitalRaw = ""; // Regex'ten yakalanan orijinal ülke adı
+    let cityForPlateRaw = "";
+    let countryForCapitalRaw = "";
 
     // 1. Basit Matematik İşlemleri
     const mathMatch = lowerInput.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/);
@@ -113,16 +119,17 @@ function getBotResponse(userInput) {
     }
 
     // 2. Plaka Kodu Sorgulama
-    const plateMatch = lowerInput.match(/(.+?)\s*(?:ilinin|'nin|nin| İli)?\s*(plakas(?:ı|i)|plaka kodu)\s*(?:nedir|kaç(?:tır)?)?\??$/i);
+    const plateMatch = lowerInput.match(plateRegex);
     if (plateMatch) {
-        cityForPlateRaw = plateMatch[1].trim();
+        cityForPlateRaw = plateMatch[1].trim(); // Yakalanan grup artık temizlenmiş olacak
         const lookupKey = getLookupKey(cityForPlateRaw);
         if (licensePlates[lookupKey]) {
             return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plaka kodu: ${licensePlates[lookupKey]}`;
         }
     }
-    const simplePlateMatch = lowerInput.match(/^(.+?)\s+plaka\s*\??$/i);
-     if (simplePlateMatch && !cityForPlateRaw) {
+    // Basit plaka sorgusu (eğer karmaşık olan eşleşmediyse)
+    const simplePlateMatch = lowerInput.match(simplePlateRegex);
+     if (simplePlateMatch && !cityForPlateRaw) { // Önceki eşleşmediyse ve bu eşleştiyse
          cityForPlateRaw = simplePlateMatch[1].trim();
          const lookupKey = getLookupKey(cityForPlateRaw);
          if (licensePlates[lookupKey]) {
@@ -131,15 +138,16 @@ function getBotResponse(userInput) {
     }
 
     // 3. Başkent Sorgulama
-    const capitalMatch = lowerInput.match(/(.+?)\s*(?:ülkesinin|'nin|nin)?\s*başkenti\s*(?:nedir|neresidir|hangisidir)?\??$/i);
+    const capitalMatch = lowerInput.match(capitalRegex);
     if (capitalMatch) {
-        countryForCapitalRaw = capitalMatch[1].trim();
+        countryForCapitalRaw = capitalMatch[1].trim(); // Yakalanan grup temizlenmiş olacak
         const lookupKey = getLookupKey(countryForCapitalRaw);
          if (capitals[lookupKey]) {
             return `${capitalizeFirstLetter(countryForCapitalRaw)}'nin başkenti ${capitals[lookupKey]}.`;
         }
     }
-    const simpleCapitalMatch = lowerInput.match(/^(.+?)\s+başkent\s*\??$/i);
+    // Basit başkent sorgusu
+    const simpleCapitalMatch = lowerInput.match(simpleCapitalRegex);
      if (simpleCapitalMatch && !countryForCapitalRaw) {
          countryForCapitalRaw = simpleCapitalMatch[1].trim();
          const lookupKey = getLookupKey(countryForCapitalRaw);
@@ -173,17 +181,13 @@ function getBotResponse(userInput) {
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 }
 
-
 function capitalizeFirstLetter(string) {
     if (!string) return string;
     return string.toLocaleLowerCase('tr-TR').split(' ').map(word => {
         if (word.length === 0) return '';
-        // 'i' harfi Türkçe'de büyük harfe çevrilirken 'İ' olmalı
-        // Diğer harfler için standart toUpperCase() yeterli olacaktır (toLocaleUpperCase('tr-TR') de kullanılabilir)
         if (word.startsWith('i')) {
             return 'İ' + word.slice(1);
         }
-        // Kelimenin ilk harfini Türkçe'ye uygun büyük harfe çevir
         return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1);
     }).join(' ');
 }
