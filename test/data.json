@@ -1,0 +1,17 @@
+{
+    "istanbul'un,plaka,nedir,kodu,kaçtır": "İstanbul'un plaka kodu 34'tür.",
+    "antalya'nın,plaka,nedir,kodu,kaçtır": "Antalya'nın plaka kodu 07'dir.",
+    "ankara'nın,plaka,nedir,kodu,kaçtır": "Ankara'nın plaka kodu 06'dır.",
+    "İngiltere'nin,başkenti,neresidir,hangi": "İngiltere'nin başkenti Londra'dır.",
+    "türkiye'nin,başkenti,neresidir,hangi": "Türkiye'nin başkenti Ankara'dır.",
+    "saat,kaç": "Şu an saat {{currentTime}}.",
+    "bugün,tarih,ne": "Bugün {{currentDate}}.",
+    "2,artı,2,kaç,eder": "2 artı 2, 4 eder.",
+    "5,çarpı,5,kaç,eder": "5 çarpı 5, 25 eder.",
+    "matematik,problem,soru": "Matematik sorularınızı çözebilirim.",
+    "selam,merhaba": "Merhaba! Size nasıl yardımcı olabilirim?",
+    "nasılsın": "Ben bir botum, iyiyim teşekkür ederim. Siz nasılsınız?",
+    "adın,ne,kimsin": "Ben Ahraz, bir yapay zeka botuyum.",
+    "günaydın": "Günaydın! Umarım harika bir gün geçirirsiniz.",
+    "iyi,akşamlar": "İyi akşamlar! Umarım gününüz güzel geçmiştir."
+  }

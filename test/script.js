@@ -1,199 +1,124 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userInput = document.getElementById('userInput');
-    const sendButton = document.getElementById('sendButton');
-    const chatMessages = document.getElementById('chatMessages');
+// script.js
 
-    // Bilgi tabanını JSON formatında burada tanımlayın.
-    // Python'daki load_knowledge fonksiyonunun yerini alır.
-    // "topic" (konu) anahtarları, eski .txt dosyalarınızın adları olabilir (uzantısız).
-    // Değerler, o konudaki potansiyel cevaplar veya eşleşecek ifadeler dizisidir.
-    const knowledgeBase = {
-        "genel": [
-            "Nasılsın?",
-            "İyiyim, sen nasılsın?",
-            "Adın ne?",
-            "Benim adım Ahraz.",
-            "Merhaba",
-            "Merhaba!",
-            "Selam",
-            "Selam!",
-            "Ne yapıyorsun?",
-            "İyiyim ne yapayım."
-        ],
-        "bilgi": [
-            "Türkiye'nin başkenti neresidir?",
-            "Türkiye'nin başkenti Ankara'dır.",
-            "Adana'nın plaka kodu nedir?",
-            "Adana'nın plaka kodu 01'dir.",
-            "istanbul'un nüfusu ne kadar?",
-            "İstanbul'un nüfusu yaklaşık 15 milyon.",
-            "Antalya'nın plaka kodu nedir?",
-            "Antalya'nın plaka kodu 07'dir.",
-            "Dünya kendi etrafında yaklaşık 24 saatte döner."
-        ],
-        "renkler": [
-            "Gökyüzü ne renk?",
-            "Gökyüzü mavidir.",
-            "Çimen ne renk?",
-            "Çimen yeşildir."
-        ]
-        // Daha fazla konu ve bilgi ekleyebilirsiniz
-        // Örnek:
-        // "tarih": [
-        //     "İstanbul kaç yılında fethedildi?",
-        //     "İstanbul 1453 yılında fethedildi."
-        // ]
-    };
+const chatMessages = document.getElementById('chatMessages');
+const userInput = document.getElementById('userInput');
+let botData = {}; // Yüklenen JSON verilerini depolamak için
 
-    // Metni temizleme ve standartlaştırma (Python clean_text)
-    function cleanText(text) {
-        if (typeof text !== 'string') {
-            text = String(text);
+// data.json dosyasını yükleme fonksiyonu
+async function loadBotData() {
+    try {
+        const response = await fetch('data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // \w (word character) -> A-Za-z0-9_
-        // \s (whitespace character)
-        // Python'daki [^\w\s\+\=\*] ifadesi, harf, rakam, alt çizgi, boşluk, +, =, * dışındaki her şeyi kaldırır.
-        return text.replace(/[^A-Za-z0-9_ğüşıöçĞÜŞİÖÇ\s+=*]/g, "").trim().toLowerCase();
+        botData = await response.json();
+        console.log("Bot verileri başarıyla yüklendi:", botData);
+    } catch (error) {
+        console.error("Bot verileri yüklenirken bir hata oluştu:", error);
+        addMessage("Bot verileri yüklenirken bir hata oluştu.", "bot");
     }
+}
 
-    // Matematik problemini çıkarma (Python extract_math_problem)
-    function extractMathProblem(question) {
-        // Sadece rakamları ve +, -, *, / operatörlerini bırakır
-        return question.replace(/[^0-9+\-*/=.]/g, ""); // Ondalık sayılar için nokta eklendi
-    }
+// Sohbet arayüzüne mesaj ekleme fonksiyonu
+function addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', `${sender}-message`);
+    messageDiv.textContent = text;
+    chatMessages.appendChild(messageDiv);
+    // Otomatik olarak en aşağıya kaydır
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
-    // Matematik problemlerini çözme (Python solve_math_problem)
-    function solveMathProblem(question) {
-        const cleanedQuestion = extractMathProblem(question);
+// Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
+function processUserInput(input) {
+    // Kullanıcı girdisini küçük harfe çevir ve Türkçe karakterleri normalleştir
+    const cleanedInput = input.toLowerCase().normalize("NFC");
+    // Kelimelere ayır
+    const inputTokens = cleanedInput.split(/\s+/).filter(word => word.length > 0);
 
-        try {
-            if (cleanedQuestion.includes('+')) {
-                const parts = cleanedQuestion.split('+');
-                const num1 = parseFloat(parts[0]);
-                const num2 = parseFloat(parts[1]);
-                if (isNaN(num1) || isNaN(num2)) throw new Error("Geçersiz sayılar.");
-                return `${num1} + ${num2} = ${num1 + num2}`;
-            } else if (cleanedQuestion.includes('*')) {
-                const parts = cleanedQuestion.split('*');
-                const num1 = parseFloat(parts[0]);
-                const num2 = parseFloat(parts[1]);
-                if (isNaN(num1) || isNaN(num2)) throw new Error("Geçersiz sayılar.");
-                return `${num1} * ${num2} = ${num1 * num2}`;
-            } else if (cleanedQuestion.includes('-')) { // Çıkarma eklendi
-                const parts = cleanedQuestion.split('-');
-                const num1 = parseFloat(parts[0]);
-                const num2 = parseFloat(parts[1]);
-                if (isNaN(num1) || isNaN(num2)) throw new Error("Geçersiz sayılar.");
-                return `${num1} - ${num2} = ${num1 - num2}`;
-            } else if (cleanedQuestion.includes('/')) { // Bölme eklendi
-                const parts = cleanedQuestion.split('/');
-                const num1 = parseFloat(parts[0]);
-                const num2 = parseFloat(parts[1]);
-                if (isNaN(num1) || isNaN(num2)) throw new Error("Geçersiz sayılar.");
-                if (num2 === 0) return "Bir sayı sıfıra bölünemez.";
-                return `${num1} / ${num2} = ${num1 / num2}`;
-            }
-            else {
-                return "Sadece toplama, çıkarma, çarpma ve bölme problemlerini çözebilirim.";
-            }
-        } catch (e) {
-            return `Hata: ${e.message}. Lütfen 'sayı operatör sayı' formatında girin (örn: 5 + 3).`;
-        }
-    }
+    let bestMatchScore = 0;
+    let bestMatchResponse = "Üzgünüm, sorunuzu tam olarak anlayamadım."; // Varsayılan yanıt
 
-    // Bilgi tabanından en iyi eşleşen cevabı bulma (Python find_answer)
-    function findAnswer(question, knowledge) {
-        const cleanedQuestion = cleanText(question);
-        if (!cleanedQuestion) return "Lütfen bir soru sorun."; // Boş giriş kontrolü
+    // Her bir data.json anahtarını (soru şablonunu) kontrol et
+    for (const key in botData) {
+        // Anahtarı küçük harfe çevir, virgüllerden ayır ve boşlukları temizle
+        const normalizedKey = key.toLowerCase().normalize("NFC");
+        const keyWords = normalizedKey.split(',').map(word => word.trim()).filter(word => word.length > 0);
 
-        let bestMatch = null;
-        let bestScore = 0;
+        if (keyWords.length === 0) continue; // Boş anahtarları atla
 
-        // Türkçe karakterleri de içeren boşluklara göre ayırma
-        const questionWords = cleanedQuestion.split(/\s+/).filter(word => word.length > 0);
-
-
-        for (const topic in knowledge) {
-            for (const line of knowledge[topic]) {
-                const cleanedLine = cleanText(line);
-                const lineWords = cleanedLine.split(/\s+/).filter(word => word.length > 0);
-
-                // 1. Tam eşleşme (En Yüksek Öncelik)
-                if (cleanedQuestion === cleanedLine) {
-                    return line; // Orijinal, temizlenmemiş satırı döndür
-                }
-
-                // 2. Kelime sırası eşleşmesi (Orta Öncelik)
-                // Sorudaki tüm kelimeler cevap satırında geçiyor mu?
-                const allWordsPresent = questionWords.every(word => cleanedLine.includes(word));
-                if (allWordsPresent && questionWords.length > 0) {
-                    let currentScore = 0;
-                    questionWords.forEach(qWord => {
-                        if (cleanedLine.includes(qWord)) {
-                            currentScore++;
-                        }
-                    });
-                     // Daha spesifik eşleşmelere öncelik ver (daha fazla kelime eşleşmesi)
-                    if (currentScore > bestScore) {
-                        bestMatch = line;
-                        bestScore = currentScore;
-                    }
-                }
-                // 3. Kısmi eşleşme (Düşük Öncelik)
-                // Sadece "allWordsPresent" false ise bu bloğa gir (yukarıdaki if'e elif gibi davranır)
-                else if (questionWords.some(word => cleanedLine.includes(word)) && questionWords.length > 0) {
-                     let currentScore = 0;
-                     questionWords.forEach(qWord => {
-                        if (cleanedLine.includes(qWord)) {
-                            currentScore++;
-                        }
-                    });
-                    // Sadece daha iyi bir "allWordsPresent" eşleşmesi bulunmadıysa ve bu kısmi eşleşme daha iyiyse güncelle
-                    if (currentScore > bestScore) {
-                        bestMatch = line;
-                        bestScore = currentScore;
-                    }
-                }
+        let matchCount = 0;
+        // Anahtar kelimelerin kullanıcı girdisinde olup olmadığını kontrol et
+        for (const keyWord of keyWords) {
+            // inputToken.includes(keyWord) kullanarak esnek eşleşme sağlarız.
+            // Örneğin, "plakası" içinde "plaka"yı bulur.
+            const foundInInput = inputTokens.some(inputToken => inputToken.includes(keyWord));
+            if (foundInInput) {
+                matchCount++;
             }
         }
-        return bestMatch ? bestMatch : "Bu soruya henüz bir cevabım yok.";
-    }
 
-    function appendMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-        messageDiv.textContent = text;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // En son mesaja kaydır
-    }
+        // Eşleşme puanını hesapla (eşleşen kelime sayısı / toplam anahtar kelime sayısı)
+        const currentScore = matchCount / keyWords.length;
 
-    function processUserInput() {
-        const userText = userInput.value.trim();
-        if (userText === "") return;
-
-        appendMessage(userText, 'user');
-        userInput.value = ""; // Giriş alanını temizle
-
-        let response = "";
-        // Önce matematik sorusu mu diye kontrol et
-        if (/[+\-*/]/.test(userText) && /[0-9]/.test(userText)) { // Operatör ve sayı içeriyorsa
-            response = solveMathProblem(userText);
-        } else {
-            // Değilse bilgi tabanında ara
-            response = findAnswer(userText, knowledgeBase);
+        // Daha iyi bir eşleşme bulunursa güncelle
+        if (currentScore > bestMatchScore) {
+            bestMatchScore = currentScore;
+            bestMatchResponse = botData[key];
         }
-
-        // Botun cevabını biraz gecikmeyle ekle (daha doğal görünmesi için)
-        setTimeout(() => {
-            appendMessage(response, 'bot');
-        }, 500);
     }
 
-    sendButton.addEventListener('click', processUserInput);
-    userInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            processUserInput();
-        }
-    });
+    // Yanıtın dinamik içeriğini (saat, tarih) güncelle
+    if (bestMatchResponse.includes('{{currentTime}}')) {
+        bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR'));
+    }
+    if (bestMatchResponse.includes('{{currentDate}}')) {
+        bestMatchResponse = bestMatchResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+    }
+
+    // Minimum bir güven puanı eşiği belirleyebilirsiniz.
+    // Örneğin, %30'dan az eşleşme varsa varsayılan mesajı döndür.
+    const responseThreshold = 0.3; 
+    if (bestMatchScore < responseThreshold) {
+        return `Üzgünüm, sorunuzu tam olarak anlayamadım. Güven Puanı: ${bestMatchScore.toFixed(2)}`;
+    }
+
+    return `${bestMatchResponse} Güven Puanı: ${bestMatchScore.toFixed(2)}`;
+}
+
+// Mesaj gönderme fonksiyonu
+async function sendMessage() {
+    const messageText = userInput.value.trim();
+    if (messageText === '') {
+        return; // Boş mesaj gönderme
+    }
+
+    // Kullanıcı mesajını arayüze ekle
+    addMessage(messageText, 'user');
+    userInput.value = ''; // Giriş alanını temizle
+
+    // Bot yanıtını bir gecikmeyle işle ve ekle (yazıyormuş gibi bir his verir)
+    setTimeout(() => {
+        const botResponse = processUserInput(messageText);
+        addMessage(botResponse, 'bot');
+    }, 300); // 500 milisaniye (yarım saniye) gecikme
+}
+
+// Gönder butonuna tıklama olay dinleyicisi
+document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+// Giriş alanında 'Enter' tuşuna basma olay dinleyicisi
+userInput.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
 });
+
+// Sayfa yüklendiğinde bot verilerini yükle
+document.addEventListener('DOMContentLoaded', loadBotData);
+
+// Sayfa yüklendiğinde hoş geldin mesajını ekle
+// Not: HTML'de zaten bu mesaj varsa, buradan ekleme yapmaya gerek kalmayabilir.
+// Eğer HTML'deki hoş geldin mesajının script tarafından yönetilmesini isterseniz
+// HTML'deki <div class="message bot-message">Selam ben Ahraz...</div> kısmını kaldırabilirsiniz.
+// addMessage("Selam ben Ahraz. Tarih, saat, matematik, plaka, başkentler falan hakimim.", "bot");
