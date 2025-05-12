@@ -80,10 +80,12 @@ function processUserInput(input) {
     // Örneğin, %30'dan az eşleşme varsa varsayılan mesajı döndür.
     const responseThreshold = 0.4; 
     if (bestMatchScore < responseThreshold) {
-        return `Üzgünüm, sorunuzu tam olarak anlayamadım. ${bestMatchScore.toFixed(2)}`;
+        //return `Üzgünüm, sorunuzu tam olarak anlayamadım. ${bestMatchScore.toFixed(2)}`;
+        return `tam olarak anlayamadım.`;
     }
 
-    return `${bestMatchResponse} ${bestMatchScore.toFixed(2)}`;
+    //return `${bestMatchResponse} ${bestMatchScore.toFixed(2)}`;
+    return `${bestMatchResponse}`;
 }
 
 // Mesaj gönderme fonksiyonu
