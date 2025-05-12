@@ -38,6 +38,14 @@
             height: 70vh;
             max-height: 600px;
             overflow: hidden;
+            /* Sürükle-bırak için görsel geri bildirim */
+            transition: all 0.2s ease-in-out;
+        }
+
+        .chat-container.dragover {
+            border: 2px dashed #007bff;
+            background-color: #e6f2ff;
+            box-shadow: 0 0 15px rgba(0,123,255,0.3);
         }
 
         .chat-messages {
@@ -48,7 +56,7 @@
             display: flex;
             flex-direction: column;
             border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            border-top-right-radius: 8uppx;
         }
 
         .message {
@@ -106,6 +114,8 @@
             background-color: #45a049;
         }
 
+        /* Spinner stilleri kaldırıldı, çünkü artık kullanılmayacak. */
+
         @media (max-width: 768px) {
             .chat-container {
                 width: 100%;
@@ -123,16 +133,18 @@
             }
         }
     </style>
+    <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
+    <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
 </head>
 <body>
 
-    <div class="chat-container">
+    <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Selam ben Ahraz. Tarih, saat, plaka, başkentler, ior numaraları falan hakimim.</div>
+            <div class="message bot-message">Selam ben Ahraz. matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim ayrıca görsel sürüklersen OCR yapabilirim. </div>
         </div>
         <div class="chat-input">
-            <input type="text" id="userInput" placeholder="hıms" autofocus>
-            <button id="sendButton">send</button>
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
+            <button id="sendButton">Gönder</button>
         </div>
     </div>
 
