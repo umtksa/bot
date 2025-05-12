@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Bot">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white-translucent">
+
+    <title>bot</title>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            /* iOS'ta kaydırma sırasında oluşabilecek zıplamayı engellemek için */
+            overscroll-behavior-y: contain;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 500px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            max-height: 600px;
+            overflow: hidden;
+            /* Sürükle-bırak için görsel geri bildirim */
+            transition: all 0.2s ease-in-out;
+        }
+
+        .chat-container.dragover {
+            border: 2px dashed #007bff;
+            background-color: #e6f2ff;
+            box-shadow: 0 0 15px rgba(0,123,255,0.3);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            line-height: 1.4;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color:#f1f0f0;
+            color: #333;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background-color: #dcf8c6;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            outline: none;
+            /* iOS'ta input odaklandığında otomatik zoom'u engellemeye yardımcı olabilir */
+            font-size: 16px; /* Genellikle 16px ve üzeri zoom'u tetiklemez */
+        }
+
+        .chat-input button {
+            padding: 10px 15px;
+            background-color: #9a9a9a;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+
+        /* Spinner styles */
+        .ocr-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007bff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+            display: none; /* Varsayılan olarak gizli */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 100%;
+                height: 100%; /* Tam ekran için */
+                max-width: none;
+                max-height: none; /* Tam ekran için */
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .chat-messages {
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+            }
+        }
+    </style>
+    <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
+</head>
+<body>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">Selam ben Ahraz. Tarih, saat, plaka, başkentler, ior numaraları falan hakimim. Görsel sürükleyerek OCR yapabilirim!</div>
+        </div>
+        <div class="ocr-spinner" id="ocrSpinner"></div> <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
+            <button id="sendButton">Gönder</button>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
