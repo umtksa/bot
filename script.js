@@ -78,7 +78,7 @@ function processUserInput(input) {
 
     // Minimum bir güven puanı eşiği belirleyebilirsiniz.
     // Örneğin, %30'dan az eşleşme varsa varsayılan mesajı döndür.
-    const responseThreshold = 0.4; 
+    const responseThreshold = 0.3; 
     if (bestMatchScore < responseThreshold) {
         //return `Üzgünüm, sorunuzu tam olarak anlayamadım. ${bestMatchScore.toFixed(2)}`;
         return `tam olarak anlayamadım.`;
