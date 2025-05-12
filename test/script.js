@@ -70,7 +70,7 @@ function processUserInput(input) {
 
     // Yanıtın dinamik içeriğini (saat, tarih) güncelle
     if (bestMatchResponse.includes('{{currentTime}}')) {
-        bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR'));
+        bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     }
     if (bestMatchResponse.includes('{{currentDate}}')) {
         bestMatchResponse = bestMatchResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
@@ -80,10 +80,10 @@ function processUserInput(input) {
     // Örneğin, %30'dan az eşleşme varsa varsayılan mesajı döndür.
     const responseThreshold = 0.3; 
     if (bestMatchScore < responseThreshold) {
-        return `Üzgünüm, sorunuzu tam olarak anlayamadım. Güven Puanı: ${bestMatchScore.toFixed(2)}`;
+        return `Üzgünüm, sorunuzu tam olarak anlayamadım. ${bestMatchScore.toFixed(2)}`;
     }
 
-    return `${bestMatchResponse} Güven Puanı: ${bestMatchScore.toFixed(2)}`;
+    return `${bestMatchResponse} ${bestMatchScore.toFixed(2)}`;
 }
 
 // Mesaj gönderme fonksiyonu
@@ -101,7 +101,7 @@ async function sendMessage() {
     setTimeout(() => {
         const botResponse = processUserInput(messageText);
         addMessage(botResponse, 'bot');
-    }, 300); // 500 milisaniye (yarım saniye) gecikme
+    }, 300 + Math.random() * 300);
 }
 
 // Gönder butonuna tıklama olay dinleyicisi
