@@ -170,12 +170,12 @@ async function sendMessage() {
 // OCR işlemini gerçekleştiren fonksiyon
 async function performOcr(imageFile) {
     if (!ocrWorker) {
-        addMessage("OCR motoru henüz hazır değil. Lütfen bekleyin veya sayfayı yenileyin.", "bot");
+        addMessage("Bi saniye OCR şeyi hazır değil!", "bot");
         return;
     }
 
     // Spinner kaldırıldığı için mesajı güncelledik
-    addMessage("biraz bekleticem...", "bot"); 
+    //addMessage("biraz bekleticem...", "bot"); 
     // ocrSpinner.style.display = 'block'; // Spinner kontrol satırı kaldırıldı
 
     try {
