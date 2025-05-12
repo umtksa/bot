@@ -1,346 +1,505 @@
-// --- VERİ DEPOLAMA (JSON'dan yüklenecek) ---
-let capitals = {};
-let licensePlates = {};
+class ChatBot {
+    constructor(config = {}) {
+        // Varsayılan konfigürasyon ve kullanıcı tarafından sağlananları birleştirme
+        this.config = {
+            dataUrl: 'data.json',
+            selectors: {
+                chatMessagesContainer: '#chatMessages',
+                userInputElement: '#userInput',
+                sendButton: '.chat-input button'
+            },
+            wordsToIgnore: [
+                "kimdir", "nedir", "kaçtır", "ne", "kaç", "neresi", "neresidir", "canım", "benim", "lütfen",
+                "acaba", "bir", "bi", "mi", "mı", "mu", "mü", "misin", "mısın", "musun", "müsün",
+                "mıdır", "midir", "mudur", "müdür", "acaba", "ki"
+            ],
+            defaultResponses: [
+                "Üzgünüm, anlayamadım.",
+                "Bu konuda bir bilgim yok.",
+                "Hiç bir fikrim yok!",
+                "Tam olarak ne dediğini anlamadım."
+            ],
+            regex: {
+                // İyelik eklerini ve ilişkili kelimeleri içeren regex desenleri
+                plateSuffixPattern: "(?:ilinin|şehrinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün|ili)",
+                capitalSuffixPattern: "(?:ülkesinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün)",
+                // Regex'leri burada tanımlayalım - temizlenmiş giriş üzerinde çalışacaklar
+                plateRegex: null, // constructor'da oluşturulacak
+                capitalRegex: null, // constructor'da oluşturulacak
+                simplePlateRegex: /^(.+?)\s+plaka\s*?$/i,
+                simpleCapitalRegex: /^(.+?)\s+başkent\s*?$/i,
+                mathRegex: /^(\d+(\.\d+)?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/,
+                // Hava durumu sorgusu için regex
+                weatherRegex: /(.+?)\s+(?:için\s+)?(?:hava durumu|hava nasıl)\s*?$/i
+            },
+            greetingKeywords: ["merhaba", "selam", "selamlar", "hey", "günaydın", "iyi günler", "iyi akşamlar", "iyi geceler"],
+            howAreYouKeywords: ["nasılsın", "naber", "nasıl gidiyor"],
+            thanksKeywords: ["teşekkür ederim", "teşekkürler", "tenks", "thanks", "sağ ol", "sağol", "çok teşekkürler"],
+            nameKeywords: ["adın ne", "kimsin", "ismin"],
+            insultKeywords: ["mal", "gerizekalı", "salak", "aptal"],
+            farewellKeywords: ["görüşürüz", "hoşçakal", "bay bay", "siyu", "see you", "bye"],
+            ...config // Kullanıcı konfigürasyonunu varsayılanların üzerine yaz
+        };
 
-const defaultResponses = [
-    "Üzgünüm, anlayamadım.",
-    "Bu konuda bir bilgim yok.",
-    "Hiç bir fikrim yok!",
-    "Tam olarak ne dediğini anlamadım."
-];
-
-// Temizlenecek (yok sayılacak) kelimeler - Bu listeyi ihtiyaca göre genişletebilirsiniz.
-const wordsToIgnore = [
-    "kimdir", "nedir", "kaçtır", "ne", "kaç", "neresi", "neresidir", "canım", "benim", "lütfen",
-    "acaba", "bir", "bi", "mi", "mı", "mu", "mü", "misin", "mısın", "musun", "müsün",
-    "mıdır", "midir", "mudur", "müdür", "acaba", "ki"
-];
-
-// --- ARAYÜZ ELEMANLARI ---
-const chatMessagesContainer = document.getElementById('chatMessages');
-const userInputElement = document.getElementById('userInput');
-const sendButton = document.querySelector('.chat-input button');
-
-// ARAMA ANAHTARI OLUŞTURMA FONKSİYONU
-function getLookupKey(text) {
-    if (typeof text !== 'string') return '';
-    let key = text.toLocaleLowerCase('tr-TR');
-    key = key.replace(/ı/g, 'i'); // 'ı' harfini 'i' yap
-    key = key.replace(/ğ/g, 'g'); // 'ğ' harfini 'g' yap - isteğe bağlı, arama tutarlılığı için
-    key = key.replace(/ü/g, 'u'); // 'ü' harfini 'u' yap
-    key = key.replace(/ş/g, 's'); // 'ş' harfini 's' yap
-    key = key.replace(/ö/g, 'o'); // 'ö' harfini 'o' yap
-    key = key.replace(/ç/g, 'c'); // 'ç' harfini 'c' yap
-     // Ek olarak boşlukları da temizleyebiliriz lookup key için, tamamen eşleşme isterseniz
-    // key = key.replace(/\s+/g, '');
-    return key;
-}
-
-// Girişi temizleyen fonksiyon - Belirlenen kelimeleri ve noktalama işaretlerini kaldırır
-function cleanInput(input, wordsToIgnoreList) {
-    if (typeof input !== 'string') return '';
-    let cleaned = input.toLocaleLowerCase('tr-TR');
-
-    // Noktalama işaretlerini boşlukla değiştir
-    cleaned = cleaned.replace(/[.,!?;:]/g, ' ');
-
-    // Birden fazla boşluğu tek boşluğa indirge ve baştaki/sondaki boşlukları kaldır
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-    if (cleaned === "") return ""; // Temizleme sonrası boş kalırsa boş string döndür
-
-    // Kelimelere ayır
-    const words = cleaned.split(' ');
-
-    // Yok sayılacak kelimeleri filtrele
-    const filteredWords = words.filter(word => !wordsToIgnoreList.includes(word));
-
-    // Tekrar birleştir
-    return filteredWords.join(' ');
-}
+        // Regex'leri dinamik olarak oluştur
+        this.config.regex.plateRegex = new RegExp(`^(.+?)\\s*(?:${this.config.regex.plateSuffixPattern})?\\s*(plakas(?:ı|i)|plaka kodu)\\s*?$`, 'i');
+        this.config.regex.capitalRegex = new RegExp(`^(.+?)\\s*(?:${this.config.regex.capitalSuffixPattern})?\\s*başkenti\\s*?$`, 'i');
 
 
-// --- VERİ YÜKLEME VE BAŞLATMA ---
-async function loadDataAndInitialize() {
-    if (userInputElement) {
-        userInputElement.disabled = true;
-        userInputElement.placeholder = "Veriler yükleniyor...";
-    }
-    if (sendButton) {
-        sendButton.disabled = true;
+        // Veri depoları
+        this.capitals = {};
+        this.licensePlates = {};
+
+        // Arayüz elemanları
+        this.ui = {
+            chatMessagesContainer: document.querySelector(this.config.selectors.chatMessagesContainer),
+            userInputElement: document.querySelector(this.config.selectors.userInputElement),
+            sendButton: document.querySelector(this.config.selectors.sendButton)
+        };
+
+         // Verilerin yüklenip yüklenmediğini takip etmek için bir bayrak
+        this.dataLoaded = false;
+
+        // Metotları bağlama (event listener'lar için 'this' bağlamını korumak)
+        this.sendMessage = this.sendMessage.bind(this);
+        this._handleKeyPress = this._handleKeyPress.bind(this);
     }
 
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    // --- Yardımcı Metotlar ---
+    _getLookupKey(text) {
+        if (typeof text !== 'string') return '';
+        let key = text.toLocaleLowerCase('tr-TR');
+        key = key.replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+                   .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+        // key = key.replace(/\s+/g, ''); // Boşlukları kaldırmak isterseniz
+        return key;
+    }
+
+    _cleanInput(input) {
+        if (typeof input !== 'string') return '';
+        let cleaned = input.toLocaleLowerCase('tr-TR');
+        cleaned = cleaned.replace(/[.,!?;:]/g, ' ');
+        cleaned = cleaned.replace(/\s+/g, ' ').trim();
+        if (cleaned === "") return "";
+
+        const words = cleaned.split(' ');
+        const filteredWords = words.filter(word => !this.config.wordsToIgnore.includes(word));
+        return filteredWords.join(' ');
+    }
+
+    _capitalizeFirstLetter(string) {
+        if (!string) return string;
+        return string.toLocaleLowerCase('tr-TR').split(' ').map(word => {
+            if (word.length === 0) return '';
+            const firstChar = word.charAt(0);
+            const rest = word.slice(1);
+            if (firstChar === 'i') return 'İ' + rest.toLocaleLowerCase('tr-TR');
+            if (firstChar === 'ı') return 'I' + rest.toLocaleLowerCase('tr-TR');
+            return firstChar.toLocaleUpperCase('tr-TR') + rest.toLocaleLowerCase('tr-TR');
+        }).join(' ');
+    }
+
+    _getRandomDefaultResponse() {
+        const index = Math.floor(Math.random() * this.config.defaultResponses.length);
+        return this.config.defaultResponses[index];
+    }
+
+    // --- Veri Yükleme ---
+    async _loadData() {
+        this.dataLoaded = false; // Yükleme başlarken bayrağı sıfırla
+        try {
+            const response = await fetch(this.config.dataUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            // Başkent verilerini işle
+            const rawCapitals = data.capitals;
+            this.capitals = {};
+            for (const key in rawCapitals) {
+                if (Object.prototype.hasOwnProperty.call(rawCapitals, key)) {
+                    this.capitals[this._getLookupKey(key)] = rawCapitals[key];
+                }
+            }
+
+            // Plaka verilerini işle
+            const rawLicensePlates = data.licensePlates;
+            this.licensePlates = {};
+            for (const key in rawLicensePlates) {
+                if (Object.prototype.hasOwnProperty.call(rawLicensePlates, key)) {
+                    this.licensePlates[this._getLookupKey(key)] = rawLicensePlates[key];
+                }
+            }
+
+            console.log("Veriler başarıyla yüklendi.");
+            this.dataLoaded = true; // Yükleme başarılıysa bayrağı set et
+            return true;
+        } catch (error) {
+            console.error("Veri yüklenirken hata oluştu:", error);
+            this.displayMessage("Veri kaynakları yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.", "bot");
+            this.dataLoaded = false; // Hata durumunda bayrak false kalır
+            return false;
         }
-        const data = await response.json();
+    }
 
-        // Başkent verilerini işle
-        const rawCapitals = data.capitals;
-        capitals = {};
-        for (const key in rawCapitals) {
-            if (Object.prototype.hasOwnProperty.call(rawCapitals, key)) {
-                 // Başkent lookup key'i oluşturulurken kelimeler temizlenmeli mi?
-                 // Genellikle ülke ismi temizlenmez, sadece arama anahtarı için formatlanır.
-                 // O yüzden burada getLookupKey kullanmak yeterli.
-                capitals[getLookupKey(key)] = rawCapitals[key];
+    // --- Arayüz Yönetimi ---
+    _setUIState(isLoading, loadError = false) {
+        if (!this.ui.userInputElement || !this.ui.sendButton) return;
+
+        if (isLoading) {
+            this.ui.userInputElement.disabled = true;
+            this.ui.userInputElement.placeholder = "Veriler yükleniyor...";
+            this.ui.sendButton.disabled = true;
+        } else {
+            if (loadError || !this.dataLoaded) {
+                // Hata durumunda veya veri yüklenemediğinde UI'ı kilitli tut
+                this.ui.userInputElement.disabled = true;
+                this.ui.userInputElement.placeholder = "Bot kullanılamıyor.";
+                this.ui.sendButton.disabled = true;
+            } else {
+                 // Yükleme başarılıysa UI'ı aktif et
+                this.ui.userInputElement.disabled = false;
+                this.ui.userInputElement.placeholder = "Mesajınızı yazın...";
+                this.ui.userInputElement.focus();
+                this.ui.sendButton.disabled = false;
+            }
+        }
+    }
+
+    displayMessage(text, sender) {
+        if (!this.ui.chatMessagesContainer) return;
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+        // Potansiyel HTML içeriğini güvenli hale getirmek için textContent kullanıyoruz
+        messageDiv.textContent = text;
+        this.ui.chatMessagesContainer.appendChild(messageDiv);
+        // Yeni mesaj eklendikten sonra en alta kaydır
+        this.ui.chatMessagesContainer.scrollTop = this.ui.chatMessagesContainer.scrollHeight;
+    }
+
+    // --- Mesaj İşleme ve Bot Mantığı ---
+
+    // İşleyici (Handler) Metotları
+    _handleMath(lowerInput) {
+        const mathMatch = lowerInput.match(this.config.regex.mathRegex);
+        if (mathMatch) {
+            const num1 = parseFloat(mathMatch[1]);
+            const operator = mathMatch[3];
+            const num2 = parseFloat(mathMatch[4]);
+            let result;
+            switch (operator) {
+                case '+': result = num1 + num2; break;
+                case '-': result = num1 - num2; break;
+                case '*': result = num1 * num2; break;
+                case '/':
+                    if (num2 === 0) return "Sıfıra bölme hatası!";
+                    result = num1 / num2;
+                    break;
+                default: return null; // Geçersiz operatör, devam et
+            }
+            const formattedResult = Number.isInteger(result) ? result : result.toFixed(2);
+            return `${num1} ${operator} ${num2} = ${formattedResult}`;
+        }
+        return null; // Eşleşme yok
+    }
+
+    _handlePlateLookup(cleanedInput) {
+        if (!this.dataLoaded) return null; // Veri yoksa kontrol etme
+        let cityForPlateRaw = null;
+        let lookupKey = null;
+
+        const plateMatch = cleanedInput.match(this.config.regex.plateRegex);
+        if (plateMatch) {
+            cityForPlateRaw = plateMatch[1].trim();
+            lookupKey = this._getLookupKey(cityForPlateRaw);
+            if (this.licensePlates[lookupKey]) {
+                return `${this._capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${this.licensePlates[lookupKey]}`;
             }
         }
 
-        // Plaka verilerini işle
-        const rawLicensePlates = data.licensePlates;
-        licensePlates = {};
-        for (const key in rawLicensePlates) {
-            if (Object.prototype.hasOwnProperty.call(rawLicensePlates, key)) {
-                 // İl/İlçe ismi için lookup key
-                licensePlates[getLookupKey(key)] = rawLicensePlates[key];
+        const simplePlateMatch = cleanedInput.match(this.config.regex.simplePlateRegex);
+        if (simplePlateMatch && !cityForPlateRaw) { // Önceki eşleşmediyse
+            cityForPlateRaw = simplePlateMatch[1].trim();
+            lookupKey = this._getLookupKey(cityForPlateRaw);
+            if (this.licensePlates[lookupKey]) {
+                return `${this._capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${this.licensePlates[lookupKey]}`;
+            }
+        }
+        return null; // Eşleşme yok
+    }
+
+    _handleCapitalLookup(cleanedInput) {
+         if (!this.dataLoaded) return null; // Veri yoksa kontrol etme
+        let countryForCapitalRaw = null;
+        let lookupKey = null;
+
+        const capitalMatch = cleanedInput.match(this.config.regex.capitalRegex);
+        if (capitalMatch) {
+            countryForCapitalRaw = capitalMatch[1].trim();
+            lookupKey = this._getLookupKey(countryForCapitalRaw);
+            if (this.capitals[lookupKey]) {
+                return `${this._capitalizeFirstLetter(countryForCapitalRaw)} başkenti ${this.capitals[lookupKey]}.`;
             }
         }
 
-        console.log("Veriler başarıyla yüklendi ve arama anahtarları oluşturuldu.");
-        if (userInputElement) {
-            userInputElement.disabled = false;
-            userInputElement.placeholder = "Mesajınızı yazın...";
-            userInputElement.focus();
+        const simpleCapitalMatch = cleanedInput.match(this.config.regex.simpleCapitalRegex);
+        if (simpleCapitalMatch && !countryForCapitalRaw) { // Önceki eşleşmediyse
+            countryForCapitalRaw = simpleCapitalMatch[1].trim();
+            lookupKey = this._getLookupKey(countryForCapitalRaw);
+            if (this.capitals[lookupKey]) {
+                return `${this._capitalizeFirstLetter(countryForCapitalRaw)} başkenti ${this.capitals[lookupKey]}.`;
+            }
         }
-        if (sendButton) {
-            sendButton.disabled = false;
+        return null; // Eşleşme yok
+    }
+
+    _handleDateTime(cleanedInput) {
+        if (cleanedInput === "saat" || cleanedInput === "zaman") {
+            const now = new Date();
+            return `Saat şu an: ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
         }
-    } catch (error) {
-        console.error("Veri yüklenirken hata oluştu:", error);
-        displayMessage("Veri kaynakları yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.", "bot");
-        if (userInputElement) {
-            userInputElement.placeholder = "Bot kullanılamıyor.";
+        if (cleanedInput === "bugün" || cleanedInput === "bugünün tarihi" || cleanedInput === "tarih") {
+            const now = new Date();
+            return `Bugünün tarihi: ${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
         }
+        return null; // Eşleşme yok
+    }
+
+    _handleWeather(cleanedInput) {
+        const weatherMatch = cleanedInput.match(this.config.regex.weatherRegex);
+        if (weatherMatch) {
+            const location = weatherMatch[1].trim();
+            // Asenkron işlemi tetikle (arka planda çalışacak)
+            setTimeout(() => this._fetchAndDisplayWeather(location), 0);
+            // Kullanıcıya hemen bilgi ver
+            return `${this._capitalizeFirstLetter(location)} için hava durumu bilgisi alınıyor...`;
+        }
+        return null; // Eşleşme yok
+    }
+
+    async _fetchAndDisplayWeather(location) {
+        const apiUrl = `https://wttr.in/${encodeURIComponent(location)}?format=j1`;
+        let weatherString = `${this._capitalizeFirstLetter(location)} için hava durumu bilgisi alınamadı.`; // Varsayılan hata
+
+        try {
+            console.log(`Workspaceing weather data from: ${apiUrl}`);
+            const response = await fetch(apiUrl);
+
+            // Hata durumunu daha detaylı ele alalım
+            if (!response.ok) {
+                 console.error(`wttr.in API error! Status: ${response.status}`);
+                 try {
+                     // API'nin JSON formatında hata mesajı verip vermediğini kontrol et
+                     const errorData = await response.json();
+                     // Örnek hata yapısı: data.weather[0].error_description (varsayımsal)
+                     // Gerçek yapı farklı olabilir, API dokümantasyonuna veya yanıta bakmak gerekir.
+                     // Basitlik adına, sadece 404 durumunu ele alalım:
+                     if (response.status === 404) {
+                         weatherString = `${this._capitalizeFirstLetter(location)} konumu bulunamadı.`;
+                     } else {
+                         // Diğer HTTP hataları için genel mesaj
+                         weatherString = `Hava durumu alınırken bir sorun oluştu (Hata Kodu: ${response.status}).`;
+                     }
+                 } catch (jsonError) {
+                     // Hata yanıtı JSON değilse veya parse edilemezse
+                     weatherString = `Hava durumu servisi (${location} için) yanıt vermiyor veya konum bulunamadı.`;
+                     console.error("Could not parse wttr.in error response:", jsonError);
+                 }
+            } else {
+                const data = await response.json();
+                console.log('Weather data received:', data);
+
+                if (data.current_condition && data.current_condition.length > 0) {
+                    const current = data.current_condition[0];
+                    // Türkçe açıklama varsa onu, yoksa İngilizce açıklamayı al
+                    const description = current.lang_tr && current.lang_tr.length > 0 ? current.lang_tr[0].value : (current.weatherDesc && current.weatherDesc.length > 0 ? current.weatherDesc[0].value : 'Açıklama yok');
+                    const tempC = current.temp_C;
+                    const feelsLikeC = current.FeelsLikeC;
+                    const humidity = current.humidity;
+                    const windSpeed = current.windspeedKmph;
+
+                    weatherString = `${this._capitalizeFirstLetter(location)}: ${description}, Sıcaklık: ${tempC}°C (Hissedilen: ${feelsLikeC}°C), Nem: %${humidity}, Rüzgar: ${windSpeed} km/s.`;
+                } else {
+                     // current_condition yoksa ama hata da değilse? Belki API formatı değişti.
+                     weatherString = `${this._capitalizeFirstLetter(location)} için güncel hava durumu verisi bulunamadı.`;
+                }
+            }
+        } catch (error) {
+            console.error("Hava durumu alınırken ağ hatası veya başka bir hata oluştu:", error);
+            weatherString = "Hava durumu servisine bağlanırken bir sorun oluştu.";
+        }
+
+        // Sonucu ayrı bir mesaj olarak göster
+        this.displayMessage(weatherString, 'bot');
+    }
+
+
+    _handleGreeting(lowerInput) {
+        if (this.config.greetingKeywords.some(word => lowerInput.includes(word) || lowerInput === word)) {
+            return "Merhaba! Nasıl yardımcı olabilirim?";
+        }
+        return null;
+    }
+
+    _handleHowAreYou(lowerInput) {
+         if (this.config.howAreYouKeywords.some(word => lowerInput.includes(word))) {
+            return "İyiyim, sorduğunuz için teşekkürler!";
+        }
+        return null;
+    }
+
+    _handleThanks(lowerInput) {
+        if (this.config.thanksKeywords.some(word => lowerInput.includes(word))) {
+            return "Rica ederim!";
+        }
+        return null;
+    }
+
+     _handleNameQuery(lowerInput) {
+        if (this.config.nameKeywords.some(word => lowerInput.includes(word))) {
+            return "Adım Ahraz."; // Botunuzun adı
+        }
+        return null;
+    }
+
+    _handleInsult(lowerInput) {
+        if (this.config.insultKeywords.some(word => lowerInput.includes(word))) {
+             return "Lütfen daha nazik bir dil kullanalım."; // Daha yapıcı bir cevap
+        }
+        return null;
+    }
+
+    _handleFarewell(lowerInput) {
+        if (this.config.farewellKeywords.some(word => lowerInput.includes(word))) {
+            return "Görüşmek üzere!";
+        }
+        return null;
+    }
+
+
+    // Ana Cevap Üretme Metodu
+    _getBotResponse(userInput) {
+        // Veriler yüklenmediyse erken çıkış veya özel mesaj
+        if (!this.dataLoaded) {
+            // Yükleme hala devam ediyorsa veya hata oluştuysa
+            const placeholderText = this.ui.userInputElement ? this.ui.userInputElement.placeholder : "";
+            if (placeholderText.includes("yükleniyor")) {
+                 return "Veriler henüz hazır değil, lütfen biraz bekleyin.";
+            } else if (placeholderText.includes("kullanılamıyor")) {
+                 return "Üzgünüm, şu anda hizmet veremiyorum.";
+            }
+             // Beklenmedik durum
+             return "Bot henüz hazır değil."
+        }
+
+        const lowerInput = userInput.toLocaleLowerCase('tr-TR').trim();
+        const cleanedLowerInput = this._cleanInput(lowerInput);
+
+        // İşleyici (Handler) Zinciri
+        const handlers = [
+            // Spesifik komutlar önce
+            { handler: this._handleMath, input: lowerInput },
+            { handler: this._handlePlateLookup, input: cleanedLowerInput },
+            { handler: this._handleCapitalLookup, input: cleanedLowerInput },
+            { handler: this._handleDateTime, input: cleanedLowerInput },
+            { handler: this._handleWeather, input: cleanedLowerInput }, // Hava durumu eklendi
+            // Genel sohbet ifadeleri sonra
+            { handler: this._handleGreeting, input: lowerInput },
+            { handler: this._handleHowAreYou, input: lowerInput },
+            { handler: this._handleThanks, input: lowerInput },
+            { handler: this._handleNameQuery, input: lowerInput },
+            { handler: this._handleInsult, input: lowerInput },
+            { handler: this._handleFarewell, input: lowerInput },
+        ];
+
+        for (const item of handlers) {
+            const response = item.handler.call(this, item.input);
+            if (response !== null) {
+                return response;
+            }
+        }
+
+        // Eğer temizlenmiş giriş tamamen boş kaldıysa (sadece yok sayılan kelimelerden oluşuyorsa)
+        if (cleanedLowerInput === "" && lowerInput !== "") {
+            return "Sanırım sadece sohbet etmek istediniz?"; // Veya varsayılan cevap
+        }
+
+        // Hiçbir handler eşleşmezse varsayılan cevabı döndür
+        return this._getRandomDefaultResponse();
+    }
+
+    // Kullanıcı mesajını işleyen ana metot
+    processUserMessage(messageText) {
+        this.displayMessage(messageText, 'user');
+
+        if (this.ui.userInputElement) {
+            this.ui.userInputElement.value = '';
+            this.ui.userInputElement.focus();
+        }
+
+        // Bot cevabını almak için biraz bekle (asenkron handler'lar için de zaman tanır)
+        // Ancak _getBotResponse artık senkron "Yükleniyor..." döndürebilir.
+        const botReply = this._getBotResponse(messageText);
+
+        // Cevabı hemen göster (eğer "Yükleniyor..." değilse)
+        // Eğer "Yükleniyor..." ise, _fetchAndDisplayWeather sonucu ayrıca gösterecek.
+        // "Yükleniyor..." mesajını da göstermek kullanıcıya geri bildirim verir.
+         setTimeout(() => {
+             this.displayMessage(botReply, 'bot');
+         }, 50 + Math.random() * 100); // Çok kısa bir gecikme, yazıyormuş gibi hissettirmek için
+    }
+
+    // Event Handlers
+    _handleKeyPress(event) {
+        if (event.key === 'Enter' && this.ui.userInputElement && !this.ui.userInputElement.disabled) {
+            this.sendMessage();
+        }
+    }
+
+    sendMessage() {
+        if (!this.ui.userInputElement || this.ui.userInputElement.disabled) {
+            return;
+        }
+        const messageText = this.ui.userInputElement.value.trim();
+        if (messageText === '') return;
+
+        this.processUserMessage(messageText);
+    }
+
+    // --- Başlatma ---
+    _attachEventListeners() {
+        if (this.ui.userInputElement) {
+            this.ui.userInputElement.addEventListener('keypress', this._handleKeyPress);
+        }
+        if (this.ui.sendButton) {
+            this.ui.sendButton.addEventListener('click', this.sendMessage);
+        }
+         // Başlangıç mesajını SADECE ilk açılışta ekle
+         // Eğer chatMessagesContainer zaten doluysa (sayfa yenilenmediyse), tekrar ekleme.
+         // Ancak basitlik adına, her başlangıçta ekleyebiliriz, çok sorun olmaz.
+        this.displayMessage("Selam ben Ahraz. Tarih, saat, matematik, plaka, başkentler, hava durumu falan hakimim.", "bot");
+    }
+
+    async initialize() {
+        this._attachEventListeners();
+        this._setUIState(true); // UI'ı yükleme moduna al
+        const dataLoadedSuccessfully = await this._loadData(); // Verileri yükle
+        this._setUIState(false, !dataLoadedSuccessfully); // Yükleme sonrası UI durumunu ayarla (hata varsa belirt)
+        console.log(`Bot başlatıldı. Veri yükleme ${dataLoadedSuccessfully ? 'başarılı' : 'başarısız'}.`);
     }
 }
 
-// --- BOT MANTIĞI ---
+// --- BOT'U BAŞLATMA ---
+document.addEventListener('DOMContentLoaded', () => {
+    const bot = new ChatBot();
 
-// İyelik eklerini ve ilişkili kelimeleri içeren regex desenleri
-// En uzun ve en spesifik olanlar başa gelecek şekilde sıralandı.
-const plateSuffixPattern = "(?:ilinin|şehrinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün|ili)";
-const capitalSuffixPattern = "(?:ülkesinin|'?nın|'?nin|'?nun|'?nün|'?ın|'?in|'?un|'?ün)";
-
-// Regex'leri global scope'ta tanımlayalım
-// NOT: Regex kalıpları, GİRİŞ TEMİZLENDİKTEN SONRA KALAN METİN üzerinde çalışır.
-// Bu nedenle, artık regex'lerin sonuna "nedir", "kaçtır" gibi kelimeleri eklemeye gerek kalmayabilir,
-// çünkü bu kelimeler zaten cleanInput tarafından kaldırılmış olacak.
-// Sadece anahtar kelime + belki iyelik eklerini hedeflemek yeterli olabilir.
-// Yeni regex'ler temizlenmiş girişi hedefleyecek şekilde:
-const plateRegex = new RegExp(`^(.+?)\\s*(?:${plateSuffixPattern})?\\s*(plakas(?:ı|i)|plaka kodu)\\s*?$`, 'i'); // Sonundaki soru kelimeleri kaldırıldı
-const capitalRegex = new RegExp(`^(.+?)\\s*(?:${capitalSuffixPattern})?\\s*başkenti\\s*?$`, 'i'); // Sonundaki soru kelimeleri kaldırıldı
-const simplePlateRegex = new RegExp(/^(.+?)\s+plaka\s*?$/i); // Basit sorgu: "ankara plaka" - sonundaki soru işareti opsiyonel
-const simpleCapitalRegex = new RegExp(/^(.+?)\s+başkent\s*?$/i); // Basit sorgu: "türkiye başkent" - sonundaki soru işareti opsiyonel
-
-
-function getBotResponse(userInput) {
-    // Veri yüklenmediyse bekleme mesajı
-    if (Object.keys(capitals).length === 0 && Object.keys(licensePlates).length === 0) {
-        const placeholderText = userInputElement ? userInputElement.placeholder : "";
-        if (placeholderText === "Veriler yükleniyor..." || placeholderText === "Bot kullanılamıyor.") {
-             return "Veriler henüz hazır değil, lütfen biraz bekleyin.";
+    bot.initialize().catch(error => {
+        console.error("Bot başlatılırken kritik bir hata oluştu:", error);
+        // Kritik hata durumunda kullanıcıya bilgi ver ve UI'ı kilitle
+        if (bot.ui.chatMessagesContainer) {
+             bot.displayMessage("Üzgünüm, bir hata oluştu ve başlatılamadım.", "bot");
         }
-    }
-
-    // Orijinal girişi küçük harfe çevir (Bazı spesifik kontroller için lazım olabilir)
-    const lowerInput = userInput.toLocaleLowerCase('tr-TR').trim();
-
-    // Girişi temizle - Yok sayılacak kelimeler ve noktalama işaretleri kaldırılır
-    const cleanedLowerInput = cleanInput(userInput, wordsToIgnore);
-
-    let cityForPlateRaw = "";
-    let countryForCapitalRaw = "";
-
-    // --- BOT CEVAP MANTIĞI ---
-
-    // 1. Basit Matematik İşlemleri (Orijinal girişte yapmak daha doğru)
-    const mathMatch = lowerInput.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/);
-    if (mathMatch) {
-        const num1 = parseFloat(mathMatch[1]);
-        const operator = mathMatch[3];
-        const num2 = parseFloat(mathMatch[4]);
-        let result;
-        switch (operator) {
-            case '+': result = num1 + num2; break;
-            case '-': result = num1 - num2; break;
-            case '*': result = num1 * num2; break;
-            case '/':
-                if (num2 === 0) return "Sıfıra bölme hatası!";
-                result = num1 / num2;
-                break;
-            default: return "Geçersiz matematik operatörü.";
-        }
-        // Sonucu tam sayıysa .00 olmadan göster, değilse 2 ondalık basamak göster
-        const formattedResult = Number.isInteger(result) ? result : result.toFixed(2);
-        return `${num1} ${operator} ${num2} = ${formattedResult}`;
-    }
-
-    // 2. Plaka Kodu Sorgulama (Temizlenmiş giriş üzerinde çalış)
-    const plateMatch = cleanedLowerInput.match(plateRegex);
-    if (plateMatch) {
-        cityForPlateRaw = plateMatch[1].trim(); // Yakalanan grup temizlenmiş olacak
-        const lookupKey = getLookupKey(cityForPlateRaw); // Arama anahtarını oluştur
-        if (licensePlates[lookupKey]) {
-            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${licensePlates[lookupKey]}`;
-        }
-    }
-    // Basit plaka sorgusu (eğer karmaşık olan eşleşmediyse ve temizlenmiş giriş üzerinde çalış)
-    const simplePlateMatch = cleanedLowerInput.match(simplePlateRegex);
-     if (simplePlateMatch && !cityForPlateRaw) { // Önceki eşleşmediyse ve bu eşleştiyse
-         cityForPlateRaw = simplePlateMatch[1].trim();
-         const lookupKey = getLookupKey(cityForPlateRaw); // Arama anahtarını oluştur
-         if (licensePlates[lookupKey]) {
-            return `${capitalizeFirstLetter(cityForPlateRaw)} ilinin plakası ${licensePlates[lookupKey]}`;
-        }
-    }
-
-    // 3. Başkent Sorgulama (Temizlenmiş giriş üzerinde çalış)
-    const capitalMatch = cleanedLowerInput.match(capitalRegex);
-    if (capitalMatch) {
-        countryForCapitalRaw = capitalMatch[1].trim(); // Yakalanan grup temizlenmiş olacak
-        const lookupKey = getLookupKey(countryForCapitalRaw); // Arama anahtarını oluştur
-         if (capitals[lookupKey]) {
-            return `${capitalizeFirstLetter(countryForCapitalRaw)} başkenti ${capitals[lookupKey]}.`;
-        }
-    }
-    // Basit başkent sorgusu (Temizlenmiş giriş üzerinde çalış)
-    const simpleCapitalMatch = cleanedLowerInput.match(simpleCapitalRegex);
-     if (simpleCapitalMatch && !countryForCapitalRaw) { // Önceki eşleşmediyse ve bu eşleştiyse
-         countryForCapitalRaw = simpleCapitalMatch[1].trim();
-         const lookupKey = getLookupKey(countryForCapitalRaw); // Arama anahtarını oluştur
-         if (capitals[lookupKey]) {
-            return `${capitalizeFirstLetter(countryForCapitalRaw)} başkenti ${capitals[lookupKey]}.`;
-        }
-    }
-
-    // Selamlama ve basit cevaplar (Burada ORIGINAL düşük harfli girişi kullanmak daha doğal olabilir)
-    // "Merhaba canım benim" -> lowerInput kullanılır, "canım benim" temizlenmez.
-    // "Merhaba" kelimesi içeriliyor mu diye bakılır.
-    if (["merhaba", "selam", "selamlar", "hey", "günaydın", "iyi günler", "iyi akşamlar", "iyi geceler"].some(word => lowerInput.includes(word) || lowerInput === word )) {
-        return "Merhaba! Nasıl yardımcı olabilirim?";
-    }
-    if (["nasılsın", "naber", "nasıl gidiyor"].some(word => lowerInput.includes(word))) {
-        return "İyiyim, sorduğunuz için teşekkürler!";
-    }
-    if (["teşekkür ederim", "teşekkürler", "tenks", "thanks", "sağ ol", "sağol", "çok teşekkürler"].some(word => lowerInput.includes(word))) {
-        return "Rica ederim!";
-    }
-    if (["adın ne", "kimsin", "ismin"].some(word => lowerInput.includes(word))) {
-        return "Adım ahraz."; // Botunuzun adı
-    }
-    // Sakıncalı ifadeler (Orijinal girişte kontrol etmek uygun)
-    if (["mal", "gerizekalı", "salak", "aptal"].some(word => lowerInput.includes(word))) {
-        return "oldukça gerizekalıyım"; // Botunuzun cevabı
-    }
-     if (["görüşürüz", "hoşçakal", "bay bay", "siyu", "see you", "bye"].some(word => lowerInput.includes(word))) {
-        return "Görüşmek üzere!";
-    }
-
-    // Saat ve Tarih sorguları (Temizlenmiş giriş üzerinde çalışmak daha esnek olur)
-    // "Saat kaç canım benim" -> "saat" olur temizlenince.
-    // "Bugünün tarihi ne acaba?" -> "bugünün tarihi" olur temizlenince.
-    if (cleanedLowerInput === "saat" || cleanedLowerInput === "zaman") {
-        const now = new Date();
-        // toLocaleTimeString zaten bölgesel formatı kullanır, saniyeyi kapatmak için seçenek ekledik
-        return `${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    // "Bugünün tarihi ne" temizlenince "bugünün tarihi" kalır
-    // "Tarih ne" temizlenince "tarih" kalır
-    if (cleanedLowerInput === "bugün" || cleanedLowerInput === "bugünün tarihi" || cleanedLowerInput === "tarih") {
-        const now = new Date();
-         // toLocaleDateString tarih formatını ayarlar
-        return `${now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-    }
-
-
-    // Eğer temizlenmiş giriş tamamen boş kaldıysa (sadece yok sayılan kelimelerden oluşuyorsa)
-    // veya hiçbir kurala uymuyorsa varsayılan cevap
-    if (cleanedLowerInput === "") {
-        return defaultResponses[Math.floor(Math.random() * defaultResponses.length)]; // Veya özel bir mesaj: "Sanırım sadece sohbet etmek istediniz?"
-    }
-
-    // Hiçbiri eşleşmezse varsayılan cevap
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-}
-
-// İlk harfi büyük yapan fonksiyon (Türkçe karakterlere duyarlı)
-function capitalizeFirstLetter(string) {
-    if (!string) return string;
-    // Tüm stringi küçük harfe çevirip kelimelere ayır
-    return string.toLocaleLowerCase('tr-TR').split(' ').map(word => {
-        if (word.length === 0) return ''; // Boş kelimeleri atla
-        // İlk harfi al
-        const firstChar = word.charAt(0);
-        // Geri kalanını al
-        const rest = word.slice(1);
-
-        // Türkçe büyük/küçük harf kurallarına göre ilk harfi büyüt
-        if (firstChar === 'i') {
-            return 'İ' + rest.toLocaleLowerCase('tr-TR'); // 'i' -> 'İ'
-        } else if (firstChar === 'ı') {
-             return 'I' + rest.toLocaleLowerCase('tr-TR'); // 'ı' -> 'I'
-        }
-        // Diğer harfler için varsayılan büyük harf
-        return firstChar.toLocaleUpperCase('tr-TR') + rest.toLocaleLowerCase('tr-TR');
-
-    }).join(' '); // Kelimeleri boşlukla birleştir
-}
-
-// --- ARAYÜZ ETKİLEŞİMİ ---
-if (userInputElement) {
-    userInputElement.addEventListener('keypress', function(event) {
-        // Enter tuşu ve input aktifse mesaj gönder
-        if (event.key === 'Enter' && !userInputElement.disabled) {
-            sendMessage();
-        }
+        bot._setUIState(false, true); // UI'ı hata durumuyla kilitle
     });
-}
-if (sendButton && userInputElement) {
-    sendButton.addEventListener('click', function() {
-        // Buton aktifse mesaj gönder
-        if (!userInputElement.disabled) {
-            sendMessage();
-        }
-    });
-}
-
-// Mesajı sohbet alanına ekler
-function displayMessage(text, sender) {
-    if (!chatMessagesContainer) return;
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-    messageDiv.textContent = text;
-    chatMessagesContainer.appendChild(messageDiv);
-    // En son mesaja kaydır
-    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-}
-
-// Kullanıcı mesajını alır, gösterir ve bot yanıtını tetikler
-function sendMessage() {
-    // Input alanı yoksa veya devre dışıysa çık
-    if (!userInputElement || userInputElement.disabled) {
-        return;
-    }
-    // Mesajı al ve baştaki/sondaki boşlukları temizle
-    const messageText = userInputElement.value.trim();
-    // Boş mesaj göndermeyi engelle
-    if (messageText === '') return;
-
-    // Kullanıcı mesajını göster
-    displayMessage(messageText, 'user');
-    // Input alanını temizle ve odaklan
-    userInputElement.value = '';
-    userInputElement.focus();
-
-    // Botun cevabını al ve biraz gecikmeli göster
-    setTimeout(() => {
-        const botReply = getBotResponse(messageText);
-        displayMessage(botReply, 'bot');
-    }, 500 + Math.random() * 300); // 500ms + 0-300ms arası rastgele gecikme
-}
-
-// Sayfa yüklendiğinde verileri yüklemeyi başlat
-document.addEventListener('DOMContentLoaded', loadDataAndInitialize);
+});
