@@ -149,16 +149,17 @@
         }
     </style>
     <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
+    <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
 </head>
 <body>
 
     <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Selam ben Ahraz. Tarih, saat, plaka, başkentler, ior numaraları falan hakimim. Görsel sürükleyerek OCR yapabilirim!</div>
+            <div class="message bot-message">Selam ben Ahraz. Tarih, matematik, saat, plaka, başkentler, ior numaraları falan hakimim, ayrıca görsel sürüklersen OCR yapabilirim!</div>
         </div>
         <div class="ocr-spinner" id="ocrSpinner"></div> <div class="chat-input">
             <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
-            <button id="sendButton">Gönder</button>
+            <button id="sendButton">send</button>
         </div>
     </div>
 

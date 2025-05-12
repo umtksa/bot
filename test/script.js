@@ -11,17 +11,17 @@ let ocrWorker;
 
 // Tesseract.js worker'ını başlatma fonksiyonu
 async function initializeOcrWorker() {
-    addMessage("OCR motoru başlatılıyor...", "bot");
+    //addMessage("OCR motoru başlatılıyor...", "bot");
     try {
         // 'tur' Türkçe dil paketi için. İhtiyaca göre başka diller de eklenebilir.
         // Örneğin: 'eng+tur' hem İngilizce hem Türkçe için.
-        ocrWorker = await Tesseract.createWorker('tur');
-        await ocrWorker.loadLanguage('tur');
-        await ocrWorker.initialize('tur');
-        addMessage("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz.", "bot");
+        ocrWorker = await Tesseract.createWorker('eng+tur');
+        await ocrWorker.loadLanguage('eng+tur');
+        await ocrWorker.initialize('eng+tur');
+        //addMessage("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz.", "bot");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
-        addMessage("OCR motoru başlatılamadı. Lütfen konsolu kontrol edin.", "bot");
+        addMessage("OCR motoru sıkıntı çıkardı :/", "bot");
     }
 }
 
@@ -52,11 +52,50 @@ function addMessage(text, sender) {
 
 // Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
 function processUserInput(input) {
-    // Kullanıcı girdisini küçük harfe çevir ve Türkçe karakterleri normalleştir
     const cleanedInput = input.toLowerCase().normalize("NFC");
-    // Kelimelere ayır
     const inputTokens = cleanedInput.split(/\s+/).filter(word => word.length > 0);
 
+    // --- Yeni: Math.js ile matematiksel ifadeleri ve birim çevirmelerini işle ---
+    // Girişte bir sayı ve olası bir matematik/birim anahtar kelime var mı kontrol et
+    const hasNumber = /\d/.test(cleanedInput);
+    const looksLikeMathOrUnitConversion = hasNumber && (
+        cleanedInput.includes(' to ') || // "inch to cm" gibi
+        cleanedInput.includes('+') ||
+        cleanedInput.includes('-') ||
+        cleanedInput.includes('*') ||
+        cleanedInput.includes('/') ||
+        cleanedInput.includes('^') || // Üs alma
+        cleanedInput.includes('sqrt') || // Karekök
+        cleanedInput.includes('log') || // Logaritma
+        cleanedInput.includes('sin') || // Trigonometrik fonksiyonlar
+        cleanedInput.includes('cos') ||
+        cleanedInput.includes('tan')
+    );
+
+    if (looksLikeMathOrUnitConversion) {
+        try {
+            // math.js doğrudan "12 inch to cm" veya "5 + 3" gibi ifadeleri işleyebilir
+            const result = math.evaluate(cleanedInput);
+            // Math.js'in döndürebileceği farklı tipleri kontrol et (sayı, birim nesnesi vb.)
+            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber) {
+                return result.toString(); // Sonucu string olarak döndür
+            } else if (result && typeof result.toString === 'function') {
+                // Daha karmaşık math.js nesneleri için de toString() kullan
+                return result.toString();
+            } else {
+                // math.js geçerli bir sonuç döndürmedi ancak hata da fırlatmadı (nadiren olabilir)
+                console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
+            }
+        } catch (e) {
+            // math.js geçerli bir ifade bulamazsa hata fırlatır
+            console.warn("Math.js hesaplaması başarısız oldu:", e.message);
+            // Bu durumda, varsayılan olarak JSON veri tabanında arama yapmaya devam et
+        }
+    }
+    // --- Math.js kısmı sonu ---
+
+
+    // Mevcut: data.json lookup (matematiksel ifade değilse veya math.js hata verirse)
     let bestMatchScore = 0;
     let bestMatchResponse = "Üzgünüm, sorunuzu tam olarak anlayamadım."; // Varsayılan yanıt
 
@@ -128,11 +167,11 @@ async function sendMessage() {
 // OCR işlemini gerçekleştiren fonksiyon
 async function performOcr(imageFile) {
     if (!ocrWorker) {
-        addMessage("OCR motoru henüz hazır değil. Lütfen bekleyin veya sayfayı yenileyin.", "bot");
+        //addMessage("OCR motoru henüz hazır değil. Lütfen bekleyin veya sayfayı yenileyin.", "bot");
         return;
     }
 
-    addMessage("Görsel işleniyor, lütfen bekleyin...", "bot");
+    //addMessage("Görsel işleniyor, lütfen bekleyin...", "bot");
     ocrSpinner.style.display = 'block'; // Spinner'ı göster
 
     try {
@@ -140,7 +179,7 @@ async function performOcr(imageFile) {
         ocrSpinner.style.display = 'none'; // Spinner'ı gizle
 
         if (text.trim()) {
-            addMessage("Görselden tanınan metin: " + text, "bot");
+            addMessage(text, "bot");
             // İsteğe bağlı: Tanınan metni botun anlayacağı formatta işleyebilirsiniz
             // const botResponseForOcr = processUserInput(text);
             // addMessage("Metin için bot yanıtı: " + botResponseForOcr, "bot");
