@@ -78,16 +78,18 @@ function processUserInput(input) {
 
     if (looksLikeMathOrUnitConversion) {
         try {
-            // math.js doğrudan "12 inch to cm" veya "5 + 3" gibi ifadeleri işleyebilir
             const result = math.evaluate(cleanedInput);
-            // Math.js'in döndürebileceği farklı tipleri kontrol et (sayı, birim nesnesi vb.)
+
+            // Check if the result is a number, unit, complex, or BigNumber
             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber) {
-                return result.toString(); // Sonucu string olarak döndür
+                const formattedResult = math.format(result, { notation: 'fixed', precision: 3 });
+                return formattedResult; // Formatlanmış stringi döndür
+                // --- GÜNCELLEME SONU ---
+
             } else if (result && typeof result.toString === 'function') {
-                // Daha karmaşık math.js nesneleri için de toString() kullan
+                 // For other math.js types that have a toString method
                 return result.toString();
             } else {
-                // math.js geçerli bir sonuç döndürmedi ancak hata da fırlatmadı (nadiren olabilir)
                 console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
             }
         } catch (e) {
@@ -97,8 +99,6 @@ function processUserInput(input) {
         }
     }
     // --- Math.js kısmı sonu ---
-
-
     // Mevcut: data.json lookup (matematiksel ifade değilse veya math.js hata verirse)
     let bestMatchScore = 0;
     let bestMatchResponse = "Üzgünüm, sorunuzu tam olarak anlayamadım."; // Varsayılan yanıt
@@ -184,9 +184,6 @@ async function performOcr(imageFile) {
 
         if (text.trim()) {
             addMessage(text, "bot");
-            // İsteğe bağlı: Tanınan metni botun anlayacağı formatta işleyebilirsiniz
-            // const botResponseForOcr = processUserInput(text);
-            // addMessage("Metin için bot yanıtı: " + botResponseForOcr, "bot");
         } else {
             addMessage("Görselde metin bulamadım!", "bot");
         }
@@ -222,7 +219,7 @@ chatContainer.addEventListener('drop', (e) => {
         if (file.type.startsWith('image/')) {
             performOcr(file);
         } else {
-            addMessage("Görsel dışında bir şey gönderme lütfen!", "bot");
+            addMessage("Sadece görsel işleyebiliyorum!", "bot");
         }
     }
 });
