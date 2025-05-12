@@ -70,7 +70,7 @@ function processUserInput(input) {
 
     // Yanıtın dinamik içeriğini (saat, tarih) güncelle
     if (bestMatchResponse.includes('{{currentTime}}')) {
-        bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+        bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR'));
     }
     if (bestMatchResponse.includes('{{currentDate}}')) {
         bestMatchResponse = bestMatchResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
