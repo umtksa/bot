@@ -9,7 +9,48 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <title>ahraz</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
+        /* --- CSS Variables for Dark Mode --- */
+        :root {
+            /* Default (Light Mode - though we default to dark below) */
+            --bg-color: #f4f4f4;
+            --container-bg: #fff;
+            --text-color: #333;
+            --user-msg-bg: #f1f0f0;
+            --bot-msg-bg: #dcf8c6;
+            --input-bg: #f9f9f9;
+            --input-border: #ccc;
+            --button-bg: #9a9a9a;
+            --button-hover-bg: #45a049;
+            --button-text: white;
+            --chat-border: #eee;
+            --input-area-border: #ddd;
+            --scrollbar-thumb: #888;
+            --scrollbar-track: #f1f1f1;
+        }
+
+        body.dark-mode {
+            --bg-color: #202123; /* Dark background */
+            --container-bg: #303134; /* Slightly lighter dark for container */
+            --text-color: #e0e0e0; /* Light text */
+            --user-msg-bg: #404144; /* Darker grey for user bubbles */
+            --bot-msg-bg: #404144; /* Same or similar for bot bubbles in this style */
+            --input-bg: #404144; /* Dark grey for input */
+            --input-border: #505154; /* Subtle border */
+            --button-bg: #505154; /* Dark grey for buttons */
+            --button-hover-bg: #606164; /* Slightly lighter hover */
+            --button-text: #e0e0e0; /* Light text for buttons */
+            --chat-border: #404144; /* Dark border */
+            --input-area-border: #404144; /* Dark border */
+            --scrollbar-thumb: #555; /* Dark scrollbar thumb */
+            --scrollbar-track: #303134; /* Dark scrollbar track */
+        }
+        /* --- End CSS Variables --- */
+
+
         html {
             height: 100%;
         }
@@ -18,132 +59,258 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: var(--bg-color); /* Use variable */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100%;
-            /* iOS'ta kaydırma sırasında oluşabilecek zıplamayı engellemek için */
+            overflow: hidden; /* Prevent body scroll */
+            color: var(--text-color); /* Use variable */
+             /* iOS'ta kaydırma sırasında oluşabilecek zıplamayı engellemek için */
             overscroll-behavior-y: contain;
         }
 
+         /* Default to dark mode */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        body.dark-mode {
+            /* These are already defined in the .dark-mode block above */
+        }
+
+
         .chat-container {
             width: 90%;
-            max-width: 500px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            max-width: 700px; /* Slightly wider max-width for a modern feel */
+            background-color: var(--container-bg); /* Use variable */
+            box-shadow: 0 0 20px rgba(0,0,0,0.3); /* Stronger shadow for dark mode contrast */
+            border-radius: 10px; /* Slightly more rounded corners */
             display: flex;
             flex-direction: column;
-            height: 70vh;
-            max-height: 600px;
+            height: 85vh; /* Use viewport height */
+            max-height: 800px; /* Max height cap */
             overflow: hidden;
-            /* Sürükle-bırak için görsel geri bildirim */
+             /* Sürükle-bırak için görsel geri bildirim */
             transition: all 0.2s ease-in-out;
         }
 
         .chat-container.dragover {
-            border: 2px dashed #007bff;
-            background-color: #e6f2ff;
+            border: 2px dashed #007bff; /* Consider dark mode suitable dragover border */
+            background-color: #e6f2ff30; /* Semi-transparent highlight */
             box-shadow: 0 0 15px rgba(0,123,255,0.3);
         }
 
         .chat-messages {
             flex-grow: 1;
-            padding: 15px;
+            padding: 20px; /* Increased padding */
             overflow-y: auto;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--chat-border); /* Use variable */
             display: flex;
             flex-direction: column;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            /* No border-radius here, handled by container */
+            scrollbar-width: thin; /* For Firefox */
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); /* For Firefox */
         }
 
+        /* Custom Scrollbar for Chrome, Edge, Safari */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #555; /* Slightly darker on hover */
+        }
+
+
         .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            line-height: 1.4;
-            max-width: 75%;
+            margin-bottom: 15px; /* Increased spacing between messages */
+            padding: 10px 15px; /* Increased padding inside bubbles */
+            border-radius: 18px; /* More rounded bubbles */
+            line-height: 1.6; /* Improved readability */
+            max-width: 80%; /* Allow bubbles to be slightly wider */
             word-wrap: break-word;
+             /* Animation for new messages (optional) */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInMessage 0.3s ease forwards;
+        }
+
+         @keyframes fadeInMessage {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .user-message {
-            background-color:#f1f0f0;
-            color: #333;
+            background-color: var(--user-msg-bg); /* Use variable */
+            color: var(--text-color); /* Use variable */
             align-self: flex-end;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 5px; /* Less rounded on the corner touching the edge */
+             /* Add subtle shadow */
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
 
         .bot-message {
-            background-color: #dcf8c6;
-            color: #333;
+            background-color: var(--bot-msg-bg); /* Use variable */
+            color: var(--text-color); /* Use variable */
             align-self: flex-start;
-            border-bottom-left-radius: 5px;
+            border-bottom-left-radius: 5px; /* Less rounded on the corner touching the edge */
+             /* Add subtle shadow */
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
 
         .chat-input {
             display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            background-color: #f9f9f9;
+            align-items: center; /* Vertically align items */
+            padding: 15px 20px; /* Increased padding */
+            border-top: 1px solid var(--input-area-border); /* Use variable */
+            background-color: var(--input-bg); /* Use variable */
+            border-bottom-left-radius: 10px; /* Match container radius */
+            border-bottom-right-radius: 10px; /* Match container radius */
         }
 
-        .chat-input input {
+        /* Styling for the file input button area */
+        .file-input-wrapper {
+            position: relative; /* Needed for hiding the actual input */
+             /* Adjust spacing between attachment button and input field */
+             margin-right: 10px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none; /* Hide the actual file input */
+        }
+
+        .file-input-label {
+            display: block; /* Make it a block element */
+            cursor: pointer;
+            padding: 10px; /* Padding to make it clickable */
+            color: var(--button-text); /* Use variable */
+            font-size: 1.2em; /* Icon size */
+             /* Align icon vertically if needed, using flex on parent */
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             border-radius: 50%; /* Make it round */
+             width: 20px; /* Fixed size for round button */
+             height: 20px;
+             background-color: transparent; /* Transparent background initially */
+             transition: color 0.2s ease-in-out; /* Smooth transition */
+        }
+
+        .file-input-label:hover {
+            color: var(--button-hover-bg); /* Change color on hover */
+        }
+
+
+        .chat-input input[type="text"] {
             flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            margin-right: 10px;
+            padding: 12px 18px; /* Adjusted padding */
+            border: 1px solid var(--input-border); /* Use variable */
+            border-radius: 24px; /* More rounded input field */
+             /* No margin-right here, handled by button spacing */
             outline: none;
-            /* iOS'ta input odaklandığında otomatik zoom'u engellemeye yardımcı olabilir */
-            font-size: 16px; /* Genellikle 16px ve üzeri zoom'u tetiklemez */
+             /* Prevent iOS zoom */
+            font-size: 1rem; /* Use relative unit */
+            background-color: var(--input-bg); /* Use variable */
+            color: var(--text-color); /* Use variable */
+            resize: none; /* Prevent manual resizing if it were a textarea */
+            line-height: 1.5; /* Align text better */
+             /* Add spacing between input and send button */
+            margin-right: 10px;
         }
 
         .chat-input button {
-            padding: 10px 15px;
-            background-color: #9a9a9a;
-            color: white;
+            padding: 10px; /* Equal padding for a square/round button look */
+            background-color: transparent; /* Transparent background */
+            color: var(--button-text); /* Use variable */
             border: none;
-            border-radius: 20px;
+            border-radius: 50%; /* Make it round */
             cursor: pointer;
             font-weight: bold;
+            font-size: 1.2em; /* Icon size */
+             /* Align icon vertically if needed */
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             width: 20px; /* Fixed size for round button */
+             height: 20px;
+            transition: color 0.2s ease-in-out; /* Smooth transition */
         }
 
         .chat-input button:hover {
-            background-color: #45a049;
+            color: var(--button-hover-bg); /* Change color on hover */
+        }
+
+        /* Hide button text, rely on icon */
+        .chat-input button span {
+            display: none;
         }
 
         @media (max-width: 768px) {
             .chat-container {
                 width: 100%;
-                height: 100%; /* Tam ekran için */
+                height: 100%; /* Full screen for mobile */
                 max-width: none;
-                max-height: none; /* Tam ekran için */
+                max-height: none; /* Full screen for mobile */
                 margin: 0;
                 border-radius: 0;
                 box-shadow: none;
             }
 
             .chat-messages {
-                border-top-left-radius: 0;
-                border-top-right-radius: 0;
+                 /* No border-radius on mobile full screen */
+                 border-top-left-radius: 0;
+                 border-top-right-radius: 0;
+                 padding: 15px; /* Slightly less padding on mobile */
             }
+
+             .chat-input {
+                padding: 10px 15px; /* Adjusted padding on mobile */
+             }
+
+             .chat-input input[type="text"] {
+                 padding: 10px 15px; /* Adjusted padding on mobile */
+             }
+
+             .file-input-label, .chat-input button {
+                padding: 8px; /* Slightly smaller hit area on mobile */
+                font-size: 1em; /* Smaller icon size */
+                width: 20px;
+                height: 20px;
+             }
         }
     </style>
+
     <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
     <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
 </head>
-<body>
-
-    <div class="chat-container" id="chatContainer">
+<body class="dark-mode"> <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen OCR yapabilirim. Bunları tamamen offline şeyapıyorum.</div>
+             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen veya eklersem OCR yapabilirim. Bunları tamamen offline şeyapıyorum.</div>
         </div>
         <div class="chat-input">
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept="image/*">
+                <label for="fileInput" class="file-input-label" title="Dosya Ekle">
+                    <i class="fas fa-paperclip"></i> </label>
+            </div>
+
             <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
-            <button id="sendButton">send</button>
+
+            <button id="sendButton" title="Gönder">
+                <span>send</span> <i class="fas fa-paper-plane"></i> </button>
         </div>
     </div>
 

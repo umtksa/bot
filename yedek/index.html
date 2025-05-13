@@ -56,7 +56,7 @@
             display: flex;
             flex-direction: column;
             border-top-left-radius: 8px;
-            border-top-right-radius: 8uppx;
+            border-top-right-radius: 8px;
         }
 
         .message {
@@ -114,8 +114,6 @@
             background-color: #45a049;
         }
 
-        /* Spinner stilleri kaldırıldı, çünkü artık kullanılmayacak. */
-
         @media (max-width: 768px) {
             .chat-container {
                 width: 100%;
@@ -135,12 +133,13 @@
     </style>
     <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
     <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
 </head>
 <body>
 
     <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen OCR yapabilirim. Ayrıca bunları tamamen offline şeyapıyorum. </div>
+             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen OCR yapabilirim. Bunları tamamen offline şeyapıyorum.</div>
         </div>
         <div class="chat-input">
             <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
