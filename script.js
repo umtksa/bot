@@ -78,18 +78,16 @@ function processUserInput(input) {
 
     if (looksLikeMathOrUnitConversion) {
         try {
+            // math.js doğrudan "12 inch to cm" veya "5 + 3" gibi ifadeleri işleyebilir
             const result = math.evaluate(cleanedInput);
-
-            // Check if the result is a number, unit, complex, or BigNumber
+            // Math.js'in döndürebileceği farklı tipleri kontrol et (sayı, birim nesnesi vb.)
             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber) {
-                const formattedResult = math.format(result, { notation: 'fixed', precision: 3 });
-                return formattedResult; // Formatlanmış stringi döndür
-                // --- GÜNCELLEME SONU ---
-
+                return result.toString(); // Sonucu string olarak döndür
             } else if (result && typeof result.toString === 'function') {
-                 // For other math.js types that have a toString method
+                // Daha karmaşık math.js nesneleri için de toString() kullan
                 return result.toString();
             } else {
+                // math.js geçerli bir sonuç döndürmedi ancak hata da fırlatmadı (nadiren olabilir)
                 console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
             }
         } catch (e) {
