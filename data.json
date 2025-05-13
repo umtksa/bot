@@ -85,7 +85,7 @@
     "elmas,ior": "Elmasın ior değeri 2.418'dir.",
     "buz,ior": "Buzun ior değeri 1.309'dur.",
     "cam,ior": "Camın ior değeri 1.500'dür.",
-    "yag,ior": "Yağın ior değeri 1.470'dir.",
+    "yağ,ior": "Yağın ior değeri 1.470'dir.",
     "bira,ior": "Biranın ior değeri 1.345'dir.",
     "bal,ior": "Balın ior değeri 1.484'tür.",
 
@@ -96,13 +96,13 @@
     "bugun,tarih": "{{currentDate}}",
 
     "selam,merhaba": "Merhaba! Size nasıl yardımcı olabilirim?",
-    "nasilsin,naber": "İyiyim teşekkür ederim.",
-    "adin,ismin": "Ben Ahraz.",
-    "gunaydin": "Günaydın!",
-    "iyi,aksamlar": "İyi akşamlar!",
-    "iyi,gunler": "İyi günler!",
-    "yas,kac": "sekiz yaşındayım.",
+    "nasılsın,naber": "İyiyim teşekkür ederim.",
+    "adın,ismin": "Ben Ahraz.",
+    "günaydın": "Günaydın!",
+    "iyi,akşamlar": "İyi akşamlar!",
+    "iyi,günler": "İyi günler!",
+    "yaşın,yaşındasın": "sekiz yaşındayım.",
     "iyi,geceler": "İyi geceler!",
-    "gule,gule,bye,hosçakal": "Güle güle!",
-    "gorusuruz": "Görüşürüz!"
+    "güle,güle,bye,hoşçakal": "Güle güle!",
+    "görüşürüz": "Görüşürüz!"
 }
