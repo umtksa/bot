@@ -13,7 +13,7 @@ let ocrWorker;
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
 // Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "ne", "kaç", "kodu", "numarası", "neresidir", "ilinin"
+    "nedir", "kaçtır", "kaç", "kodu", "numarası", "neresidir", "ilinin", "ne"
     // Daha fazla stopword ekleyebilirsin
 ]);
 // --- Stopword Listesi Sonu ---
