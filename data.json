@@ -97,10 +97,8 @@
 
     "selam": "Selam! Size nasıl yardımcı olabilirim?",
     "merhaba": "Merhaba! Size nasıl yardımcı olabilirim?",
-    "nasılsın": "İyiyim teşekkür ederim.",
-    "naber": "İyiyim teşekkür ederim.",
-    "adın": "Adım Ahraz.",
-    "ismin": "İsmim Ahraz.",
+    "naber nasılsın": "İyiyim teşekkür ederim.",
+    "adın ismin": "Adım Ahraz.",
     "günaydın": "Günaydın!",
     "iyi akşamlar": "İyi akşamlar!",
     "iyi günler": "İyi günler!",
