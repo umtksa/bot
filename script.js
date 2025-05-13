@@ -11,10 +11,9 @@ let ocrWorker;
 
 // --- Stopword Listesi ---
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
-// Fuse.js kendi algoritmalarını kullanabilir, ancak anahtarları temizlerken yine de kullanışlı olabilir.
-// Listeyi daha önceki kapsamlı halinden daralttık, ihtiyaca göre genişletebilirsin.
+// Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "ne", "kaç", "neresidir"
+    "nedir", "kaçtır", "ne", "kaç","neresidir"
     // Daha fazla stopword ekleyebilirsin
 ]);
 // --- Stopword Listesi Sonu ---
@@ -47,34 +46,46 @@ async function loadBotData() {
         // --- Fuse.js'i Başlat ---
         // Aranacak veriyi Fuse.js'in anlayacağı bir formatta hazırlayın.
         // data.json'ın anahtarlarını arayacağız.
-        // Anahtarları Fuse'a vermeden önce temizlemek, eşleştirmeyi iyileştirebilir.
-         const searchableKeys = Object.keys(botData).map(key => ({
-             // Anahtarları da küçük harf yapıp, virgülleri boşluğa çeviriyoruz.
-             // Fuse'un kendi temizliği olsa da ön hazırlık iyi olabilir.
-             key: key.toLowerCase().replace(/,/g, ' ')
-             // Ek olarak: Anahtarlardan stopwordleri veya kesme işaretli ekleri temizlemek istersen buraya ekleyebilirsin,
-             // ancak bu anahtarların orijinal halini bozabilir ve Fuse'un kendi esnekliğinden faydalanmanı azaltabilir.
-             // Şimdilik sadece küçük harf ve virgül temizliği ile bırakalım,
-             // kullanıcının girdisini temizlemeye odaklanalım.
-         }));
+        // Her anahtar için HEM TEMİZLENMİŞ HALİNİ (arama için) HEM DE ORİJİNAL HALİNİ (yanıt almak için) saklıyoruz.
+         const searchableItems = Object.keys(botData).map(originalKey => {
+             // Orijinal anahtarı al, temizleme adımlarını uygula:
+             let cleanedKey = originalKey.toLowerCase().normalize("NFC");
+             cleanedKey = cleanedKey.replace(/'[^\\s]+/g, ''); // Kesme işaretli ekleri kaldır
+             cleanedKey = cleanedKey.replace(/[.,!?;:]/g, ''); // Noktalamayı kaldır
+             cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim(); // Birden fazla boşluğu tek boşluğa indirge
 
+             // İstersen burada cleanedKey'den stopwordleri de çıkarabilirsin
+             // const tokens = cleanedKey.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
+             // cleanedKey = tokens.join(' ');
 
+             return {
+                 cleanedKey: cleanedKey, // Fuse bu alanda arama yapacak
+                 originalKey: originalKey // Biz bu anahtarı kullanarak botData'dan yanıtı alacağız
+             };
+         });
+
+        // Fuse.js seçenekleri - Eşleşme performansını ayarlamak için burası kritik!
         const options = {
-            includeScore: true, // Eşleşme puanını dahil et
-            keys: ['key'], // Hangi alanda arama yapılacağını belirt (burada 'key' alanında)
-            threshold: 0.8, // Eşleşme eşiği (0.0 = tam eşleşme, 1.0 = tamamen farklı). Ayarlayarak en iyi sonucu bul.
+            includeScore: true, // Eşleşme puanını dahil et (debug için iyi)
+            keys: ['cleanedKey'], // Fuse'un arama yapacağı alanın adı
+            // --- BURASI ÇOK ÖNEMLİ: EŞİK DEĞERİNİ AYARLA! ---
+            // 0.0 = tam eşleşme, 1.0 = tamamen farklı.
+            // 0.2 - 0.4 arası başlangıç için denenebilir.
+            // Önceki kodda 0.3 yapmıştık, sorun yanıt almada olduğu için 0.3 kalsın.
+            threshold: 0.3, // **BU DEĞERİ TEST EDEREK OPTİMİZE ETMELİSİN!**
             // location: 0, // Aranacak metnin başından uzaklık
             // distance: 100, // Eşleşen karakterlerin maksimum mesafesi
             ignoreLocation: true, // Konumu önemseme (kelime sırası önemli değilse) - Çoğu chatbot sorusu için iyi
-            // useExtendedSearch: true, // Gelişmiş arama modunu etkinleştir (ör: ' "term" !exclude)
-            // includeMatches: true, // Eşleşen kısımları sonuçlara dahil et
+            // useExtendedSearch: true, // Gelişmiş arama modunu etkinleştir (istekliysen deneyebilirsin)
+            // includeMatches: true, // Eşleşen kısımları sonuçlara dahil et (debug için iyi)
             // minMatchCharLength: 1, // Eşleşme için minimum karakter uzunluğu
             // isCaseSensitive: false, // Küçük/büyük harf duyarlılığı (false varsayılan)
             // shouldSort: true, // Sonuçları puana göre sırala (true varsayılan)
         };
 
-        fuse = new Fuse(searchableKeys, options);
-        console.log("Fuse.js arama motoru başlatıldı.");
+        // Fuse.js'i oluştururken arama yapılacak diziyi (searchableItems) ve seçenekleri veriyoruz
+        fuse = new Fuse(searchableItems, options);
+        console.log("Fuse.js arama motoru başlatıldı. Aranabilir anahtarlar:", searchableItems.map(item => item.cleanedKey)); // Debug için temizlenmiş anahtarları da logla
 
     } catch (error) {
         console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
@@ -82,7 +93,7 @@ async function loadBotData() {
     }
 }
 
-// Sohbet arayüzüne mesaj ekleme fonksiyonu
+// Sohbet arayüzüne mesaj ekleme fonksiyonu (Aynı)
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
@@ -92,15 +103,43 @@ function addMessage(text, sender) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// --- CleanTextForDisplay Kısmen Güncellendi (Görüntüleme için) ---
-// Bu fonksiyon sadece metni arayüzde göstermeden önce temel temizlik yapar.
+// --- cleanSearchTerm: Kullanıcı girdisini Fuse.js araması için temizler ---
+// Bu fonksiyon, processUserInput içindeki temizleme mantığını buraya taşıyor.
+// Fuse.js'e verilmeden önce kullanıcı girdisine uygulanır.
+function cleanSearchTerm(input) {
+    if (!input) return "";
+
+    let cleaned = input.toLowerCase().normalize("NFC"); // Küçük harf yap ve normalize et
+
+    // Kesme işareti ve sonrasındaki ekleri kaldır ('nın, 'si vb.)
+    // Regex: ' işaretini ve ardından gelen bir veya daha fazla boşluk olmayan karakteri yakalar
+    cleaned = cleaned.replace(/'[^\\s]+/g, '');
+
+    // Yaygın noktalama işaretlerini kaldır
+    cleaned = cleaned.replace(/[.,!?;:]/g, '');
+
+    // Birden fazla boşluğu tek boşluğa indirge ve baştan/sondan boşlukları sil
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+     // İstersen burada stopwordleri de çıkarabilirsin, ancak Fuse'un iç algoritmaları
+     // bazen stopwordler varken de iyi çalışabilir.
+     // Deneyerek karar verebilirsin. Şimdilik bu adımı atlıyoruz.
+     // const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
+     // cleaned = tokens.join(' ');
+
+
+    return cleaned;
+}
+
+
+// --- cleanTextForDisplay: Metni arayüzde göstermeden önce temizler ---
+// Bu fonksiyon sadece görüntüleme amaçlıdır.
 function cleanTextForDisplay(text) {
     if (!text) return "";
-    // Sadece genel temizlik (küçük harf, kesme işareti kaldırma, çoklu boşlukları tek yapma)
+    // Sadece temel temizlik (küçük harf, çoklu boşlukları tek yapma)
     return text.toLowerCase()
                .normalize("NFC") // Türkçe karakterleri normalleştir
-               // .replace(/'/g, '') // Kesme işaretini kaldırmak istersen aktif et
-               .replace(/[.,!?;:]/g, '') // Noktalamayı kaldır
+               // Kesme işaretini kaldırmak veya noktalamayı kaldırmak istersen buraya ekleyebilirsin
                .replace(/\s+/g, ' ') // Birden fazla boşluğu tek boşluğa indirge
                .trim();
 }
@@ -108,7 +147,7 @@ function cleanTextForDisplay(text) {
 
 // Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
 function processUserInput(input) {
-    // --- Math.js kısmı ---
+    // --- Math.js kısmı (Aynı) ---
     // Math için temizleme yaparken sadece virgülleri noktaya çevir
     const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
     const hasNumber = /\d/.test(cleanedInputForMath);
@@ -143,25 +182,8 @@ function processUserInput(input) {
         return "Üzgünüm, arama motoru henüz hazır değil.";
     }
 
-    // --- Kullanıcı girdisini arama için temizle (Yeni Özel Temizlik) ---
-    let searchTerm = input.toLowerCase().normalize("NFC");
-
-    // Kesme işareti ve sonrasındaki ekleri kaldır ('nın, 'si vb.)
-    // Regex: ' işaretini ve ardından gelen bir veya daha fazla boşluk olmayan karakteri yakalar
-    searchTerm = searchTerm.replace(/'[^\\s]+/g, '');
-
-    // Yaygın noktalama işaretlerini kaldır
-    searchTerm = searchTerm.replace(/[.,!?;:]/g, '');
-
-    // Birden fazla boşluğu tek boşluğa indirge ve baştan/sondan boşlukları sil
-    searchTerm = searchTerm.replace(/\s+/g, ' ').trim();
-
-     // İstersen burada stopwordleri de çıkarabilirsin, ancak Fuse'un iç algoritmaları
-     // bazen stopwordlerin varlığını veya yokluğunu dikkate alabilir.
-     // Deneyerek karar verebilirsin. Şimdilik çıkarma adımını atlıyoruz.
-     // const searchTermTokens = searchTerm.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
-     // searchTerm = searchTermTokens.join(' ');
-
+    // Kullanıcı girdisini arama için temizle
+    const searchTerm = cleanSearchTerm(input);
 
     // Eğer temizlenmiş arama terimi boşsa anlamlı bir girdi yok demektir
     if (searchTerm.length === 0) {
@@ -169,38 +191,33 @@ function processUserInput(input) {
          return "Üzgünüm, ne sorduğunu anlayamadım.";
     }
 
-
     // Fuse.js ile arama yap
     const results = fuse.search(searchTerm);
 
     console.log(`Searching for: "${searchTerm}"`); // Arama terimini konsola yazdır
-    console.log("Fuse.js Results:", results);
+    console.log("Fuse.js Results:", results); // Debug için tüm sonuçları yazdır
 
 
-    // En iyi eşleşmeyi ve puanını al (Fuse.js sonuçları puana göre sıralar, 0 en iyi puan)
+    // En iyi eşleşmeyi al (Fuse.js sonuçları puana göre sıralar, 0 en iyi puan)
     if (results.length > 0) {
         const bestMatch = results[0];
-        const matchedKey = bestMatch.item.key; // Eşleşen data.json anahtarı (objeden alıyoruz)
+        // --- BURASI DÜZELTİLDİ: Orijinal anahtarı alıyoruz ---
+        const matchedOriginalKey = bestMatch.item.originalKey;
         const score = bestMatch.score; // Eşleşme puanı (0 ile 1 arası, 0 en iyi)
 
-        // Fuse'un eşiği otomatik olarak filtreleme yapar, bu yüzden results.length > 0 kontrolü yeterli.
-        // Ancak yine de puanı görmek faydalı.
-        console.log(`Best Fuse Match Key: "${matchedKey}" | Score: ${score.toFixed(4)}`);
+        // Fuse'un kendi eşiği (options.threshold) zaten sonuçları filtreler.
+        // Burada sadece bulunan en iyi sonucun puanını logluyoruz.
+        console.log(`Best Fuse Match Original Key: "${matchedOriginalKey}" | Score: ${score.toFixed(4)}`);
 
+        // --- BURASI DÜZELTİLDİ: Orijinal anahtarı kullanarak yanıtı alıyoruz ---
+        let botResponse = botData[matchedOriginalKey];
 
-        // Eşleşen anahtarın yanıtını al
-        // Dikkat: matchedKey, searchableKeys objesindeki 'key' alanıdır.
-        // botData objesinde doğrudan bu key'i bulmak için bir lookup yapmalıyız.
-        // Bunu Fuse'un searchConfigs veya keys ayarlarıyla daha doğrudan yapmanın yolları olabilir,
-        // ama bu yapı mevcut botData'ya uygun.
-        let botResponse = botData[matchedKey.replace(/ /g, ',')]; // Anahtarı orijinal formatına (virgülle ayrılmış) çevirerek botData'dan çek
-
-        // Eğer çevrimde veya lookup'ta sorun olursa (beklenmez ama)
+        // Eğer eşleşme bulundu ama yanıt boşsa (beklenmez, originalKey botData'dan gelmeli)
         if (!botResponse) {
-            console.error(`Could not find response for matched key: "${matchedKey}"`);
-            return "Üzgünüm, bir eşleşme buldum ama yanıtını alamadım.";
+            console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
+            // Bu hata normalde olmamalı, eğer oluyorsa mantık hatası var demektir.
+            return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
         }
-
 
         // Yanıtın dinamik içeriğini (saat, tarih) güncelle
         if (botResponse.includes('{{currentTime}}')) {
@@ -219,16 +236,14 @@ function processUserInput(input) {
 }
 
 
-// Mesaj gönderme fonksiyonu
+// Mesaj gönderme fonksiyonu (Aynı)
 async function sendMessage() {
     const messageText = userInput.value.trim();
     if (messageText === '') {
         return; // Boş mesaj gönderme
     }
 
-    // Kullanıcı mesajını arayüze ekle (Kullanıcının yazdığı orijinal metni göstermek genellikle daha iyi)
-    addMessage(messageText, 'user');
-
+    addMessage(messageText, 'user'); // Kullanıcının yazdığı orijinal metni göstermek
     userInput.value = ''; // Giriş alanını temizle
 
     // Bot yanıtını bir gecikmeyle işle ve ekle
@@ -238,7 +253,7 @@ async function sendMessage() {
     }, 300 + Math.random() * 500);
 }
 
-// OCR işlemini gerçekleştiren fonksiyon (Bu fonksiyon değişmedi)
+// OCR işlemini gerçekleştiren fonksiyon (Aynı)
 async function performOcr(imageFile) {
     if (!ocrWorker) {
         addMessage("OCR motoru henüz hazır değil!", "bot");
@@ -262,7 +277,7 @@ async function performOcr(imageFile) {
     }
 }
 
-// Sürükle-Bırak Olayları (Bu kısım değişmedi)
+// Sürükle-Bırak Olayları (Aynı)
 chatContainer.addEventListener('dragover', (e) => {
     e.preventDefault();
     chatContainer.classList.add('dragover');
@@ -288,17 +303,17 @@ chatContainer.addEventListener('drop', (e) => {
 });
 
 
-// Gönder butonuna tıklama olay dinleyicisi
+// Gönder butonuna tıklama olay dinleyicisi (Aynı)
 document.getElementById('sendButton').addEventListener('click', sendMessage);
 
-// Giriş alanında 'Enter' tuşuna basma olay dinleyicisi
+// Giriş alanında 'Enter' tuşuna basma olay dinleyicisi (Aynı)
 userInput.addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         sendMessage();
     }
 });
 
-// Sayfa yüklendiğinde bot verilerini, Fuse.js'i ve Tesseract'ı yükle
+// Sayfa yüklendiğinde bot verilerini, Fuse.js'i ve Tesseract'ı yükle (Aynı)
 document.addEventListener('DOMContentLoaded', async () => {
     // loadBotData fonksiyonu artık Fuse.js'i de başlatıyor
     await loadBotData();
