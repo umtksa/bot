@@ -93,11 +93,12 @@
     "türkiye,baskent": "Türkiye'nin başkenti Ankara'dır.",
 
     "saat": "{{currentTime}}",
-    "bugun,tarih": "{{currentDate}}",
+    "tarih": "{{currentDate}}",
 
     "selam,merhaba": "Merhaba! Size nasıl yardımcı olabilirim?",
     "nasılsın,naber": "İyiyim teşekkür ederim.",
-    "adın,ismin": "Ben Ahraz.",
+    "adın": "Ben Ahraz.",
+    "ismin": "Ben Ahraz.",
     "günaydın": "Günaydın!",
     "iyi,akşamlar": "İyi akşamlar!",
     "iyi,günler": "İyi günler!",

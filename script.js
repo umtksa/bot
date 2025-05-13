@@ -13,7 +13,7 @@ let ocrWorker;
 // ancak anahtarları temizlerken yine de kullanışlı olabilir) ---
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "ne", 
+    "nedir", "kaçtır", "ne", "kaç" 
 
 ]);
 // --- Stopword Listesi Sonu ---
@@ -51,7 +51,7 @@ async function loadBotData() {
         const options = {
             includeScore: true, // Eşleşme puanını dahil et
             keys: ['key'], // Hangi alanda arama yapılacağını belirt (burada 'key' alanında)
-            threshold: 0.3, // Eşleşme eşiği (0.0 = tam eşleşme, 1.0 = tamamen farklı). Ayarlayarak en iyi sonucu bul.
+            threshold: 0.5, // Eşleşme eşiği (0.0 = tam eşleşme, 1.0 = tamamen farklı). Ayarlayarak en iyi sonucu bul.
             // location: 0, // Aranacak metnin başından uzaklık
             // distance: 100, // Eşleşen karakterlerin maksimum mesafesi
             ignoreLocation: true, // Konumu önemseme (kelime sırası önemli değilse)
