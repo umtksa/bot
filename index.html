@@ -66,229 +66,161 @@
             height: 100%;
             overflow: hidden; /* Prevent body scroll */
             color: var(--text-color); /* Use variable */
-             /* iOS'ta kaydırma sırasında oluşabilecek zıplamayı engellemek için */
             overscroll-behavior-y: contain;
         }
 
-         /* Default to dark mode */
-        body {
+        body { /* Default to dark mode */
             background-color: var(--bg-color);
             color: var(--text-color);
         }
-        body.dark-mode {
-            /* These are already defined in the .dark-mode block above */
-        }
-
 
         .chat-container {
             width: 90%;
-            max-width: 700px; /* Slightly wider max-width for a modern feel */
-            background-color: var(--container-bg); /* Use variable */
-            box-shadow: 0 0 20px rgba(0,0,0,0.3); /* Stronger shadow for dark mode contrast */
-            border-radius: 10px; /* Slightly more rounded corners */
+            max-width: 700px;
+            background-color: var(--container-bg);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
-            height: 85vh; /* Use viewport height */
-            max-height: 800px; /* Max height cap */
+            height: 85vh;
+            max-height: 800px;
             overflow: hidden;
-             /* Sürükle-bırak için görsel geri bildirim */
-            transition: all 0.2s ease-in-out;
+            /* transition: all 0.2s ease-in-out; Sürükle bırak için kaldırıldı */
         }
 
+        /* Sürükle bırak için .dragover stili kaldırıldı
         .chat-container.dragover {
-            border: 2px dashed #007bff; /* Consider dark mode suitable dragover border */
-            background-color: #e6f2ff30; /* Semi-transparent highlight */
+            border: 2px dashed #007bff;
+            background-color: #e6f2ff30;
             box-shadow: 0 0 15px rgba(0,123,255,0.3);
         }
+        */
 
         .chat-messages {
             flex-grow: 1;
-            padding: 20px; /* Increased padding */
+            padding: 20px;
             overflow-y: auto;
-            border-bottom: 1px solid var(--chat-border); /* Use variable */
+            border-bottom: 1px solid var(--chat-border);
             display: flex;
             flex-direction: column;
-            /* No border-radius here, handled by container */
-            scrollbar-width: thin; /* For Firefox */
-            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); /* For Firefox */
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
 
-        /* Custom Scrollbar for Chrome, Edge, Safari */
-        .chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: var(--scrollbar-track);
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--scrollbar-thumb);
-            border-radius: 4px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #555; /* Slightly darker on hover */
-        }
-
+        .chat-messages::-webkit-scrollbar { width: 8px; }
+        .chat-messages::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb:hover { background: #555; }
 
         .message {
-            margin-bottom: 15px; /* Increased spacing between messages */
-            padding: 10px 15px; /* Increased padding inside bubbles */
-            border-radius: 18px; /* More rounded bubbles */
-            line-height: 1.6; /* Improved readability */
-            max-width: 80%; /* Allow bubbles to be slightly wider */
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.6;
+            max-width: 80%;
             word-wrap: break-word;
-             /* Animation for new messages (optional) */
             opacity: 0;
             transform: translateY(20px);
             animation: fadeInMessage 0.3s ease forwards;
         }
 
-         @keyframes fadeInMessage {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeInMessage {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .user-message {
-            background-color: var(--user-msg-bg); /* Use variable */
-            color: var(--text-color); /* Use variable */
+            background-color: var(--user-msg-bg);
+            color: var(--text-color);
             align-self: flex-end;
-            border-bottom-right-radius: 5px; /* Less rounded on the corner touching the edge */
-             /* Add subtle shadow */
+            border-bottom-right-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
 
         .bot-message {
-            background-color: var(--bot-msg-bg); /* Use variable */
-            color: var(--text-color); /* Use variable */
+            background-color: var(--bot-msg-bg);
+            color: var(--text-color);
             align-self: flex-start;
-            border-bottom-left-radius: 5px; /* Less rounded on the corner touching the edge */
-             /* Add subtle shadow */
+            border-bottom-left-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
 
         .chat-input {
             display: flex;
-            align-items: center; /* Vertically align items */
-            padding: 15px 20px; /* Increased padding */
-            border-top: 1px solid var(--input-area-border); /* Use variable */
-            background-color: var(--input-bg); /* Use variable */
-            border-bottom-left-radius: 10px; /* Match container radius */
-            border-bottom-right-radius: 10px; /* Match container radius */
+            align-items: center;
+            padding: 15px 20px;
+            border-top: 1px solid var(--input-area-border);
+            background-color: var(--input-bg);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
         }
 
-        /* Styling for the file input button area */
         .file-input-wrapper {
-            position: relative; /* Needed for hiding the actual input */
-             /* Adjust spacing between attachment button and input field */
-             margin-right: 10px;
+            position: relative;
+            margin-right: 10px;
         }
 
-        .file-input-wrapper input[type="file"] {
-            display: none; /* Hide the actual file input */
-        }
+        .file-input-wrapper input[type="file"] { display: none; }
 
         .file-input-label {
-            display: block; /* Make it a block element */
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            padding: 10px; /* Padding to make it clickable */
-            color: var(--button-text); /* Use variable */
-            font-size: 1.2em; /* Icon size */
-             /* Align icon vertically if needed, using flex on parent */
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             border-radius: 50%; /* Make it round */
-             width: 20px; /* Fixed size for round button */
-             height: 20px;
-             background-color: transparent; /* Transparent background initially */
-             transition: color 0.2s ease-in-out; /* Smooth transition */
+            padding: 10px;
+            color: var(--button-text);
+            font-size: 1.2em;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            background-color: transparent;
+            transition: color 0.2s ease-in-out;
         }
-
-        .file-input-label:hover {
-            color: var(--button-hover-bg); /* Change color on hover */
-        }
-
+        .file-input-label:hover { color: var(--button-hover-bg); }
 
         .chat-input input[type="text"] {
             flex-grow: 1;
-            padding: 12px 18px; /* Adjusted padding */
-            border: 1px solid var(--input-border); /* Use variable */
-            border-radius: 24px; /* More rounded input field */
-             /* No margin-right here, handled by button spacing */
+            padding: 12px 18px;
+            border: 1px solid var(--input-border);
+            border-radius: 24px;
             outline: none;
-             /* Prevent iOS zoom */
-            font-size: 1rem; /* Use relative unit */
-            background-color: var(--input-bg); /* Use variable */
-            color: var(--text-color); /* Use variable */
-            resize: none; /* Prevent manual resizing if it were a textarea */
-            line-height: 1.5; /* Align text better */
-             /* Add spacing between input and send button */
+            font-size: 1rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            resize: none;
+            line-height: 1.5;
             margin-right: 10px;
         }
 
         .chat-input button {
-            padding: 10px; /* Equal padding for a square/round button look */
-            background-color: transparent; /* Transparent background */
-            color: var(--button-text); /* Use variable */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--button-text);
             border: none;
-            border-radius: 50%; /* Make it round */
+            border-radius: 50%;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1.2em; /* Icon size */
-             /* Align icon vertically if needed */
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             width: 20px; /* Fixed size for round button */
-             height: 20px;
-            transition: color 0.2s ease-in-out; /* Smooth transition */
+            font-size: 1.2em;
+            width: 20px;
+            height: 20px;
+            transition: color 0.2s ease-in-out;
         }
-
-        .chat-input button:hover {
-            color: var(--button-hover-bg); /* Change color on hover */
-        }
-
-        /* Hide button text, rely on icon */
-        .chat-input button span {
-            display: none;
-        }
+        .chat-input button:hover { color: var(--button-hover-bg); }
+        .chat-input button span { display: none; }
 
         @media (max-width: 768px) {
             .chat-container {
-                width: 100%;
-                height: 100%; /* Full screen for mobile */
-                max-width: none;
-                max-height: none; /* Full screen for mobile */
-                margin: 0;
-                border-radius: 0;
-                box-shadow: none;
+                width: 100%; height: 100%; max-width: none; max-height: none;
+                margin: 0; border-radius: 0; box-shadow: none;
             }
-
-            .chat-messages {
-                 /* No border-radius on mobile full screen */
-                 border-top-left-radius: 0;
-                 border-top-right-radius: 0;
-                 padding: 15px; /* Slightly less padding on mobile */
+            .chat-messages { border-top-left-radius: 0; border-top-right-radius: 0; padding: 15px; }
+            .chat-input { padding: 10px 15px; }
+            .chat-input input[type="text"] { padding: 10px 15px; }
+            .file-input-label, .chat-input button {
+                padding: 8px; font-size: 1em; width: 20px; height: 20px;
             }
-
-             .chat-input {
-                padding: 10px 15px; /* Adjusted padding on mobile */
-             }
-
-             .chat-input input[type="text"] {
-                 padding: 10px 15px; /* Adjusted padding on mobile */
-             }
-
-             .file-input-label, .chat-input button {
-                padding: 8px; /* Slightly smaller hit area on mobile */
-                font-size: 1em; /* Smaller icon size */
-                width: 20px;
-                height: 20px;
-             }
         }
     </style>
 
@@ -296,21 +228,23 @@
     <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
 </head>
-<body class="dark-mode"> <div class="chat-container" id="chatContainer">
+<body class="dark-mode">
+    <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen veya eklersem OCR yapabilirim. Bunları tamamen offline şeyapıyorum.</div>
+            <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, IOR numaraları gibi konularda bilgiliyim. Ataç simgesiyle görsel eklersen, sonrasında göndereceğin mesajda 'ocr' komutunu kullanarak metnini alabilirsin. Tüm bunları çevrimdışı yapıyorum.</div>
         </div>
         <div class="chat-input">
             <div class="file-input-wrapper">
                 <input type="file" id="fileInput" accept="image/*">
                 <label for="fileInput" class="file-input-label" title="Dosya Ekle">
-                    <i class="fas fa-paperclip"></i> </label>
+                    <i class="fas fa-paperclip"></i>
+                </label>
             </div>
-
-            <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
-
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın veya ataçla görsel ekleyin..." autofocus>
             <button id="sendButton" title="Gönder">
-                <span>send</span> <i class="fas fa-paper-plane"></i> </button>
+                <span>send</span>
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
