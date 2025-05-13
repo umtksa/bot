@@ -13,7 +13,7 @@ let ocrWorker;
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
 // Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen"
+    "nedir", "kaçtır", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen"
     // Daha fazla stopword ekleyebilirsin
 ]);
 // --- Stopword Listesi Sonu ---
