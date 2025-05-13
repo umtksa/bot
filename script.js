@@ -13,7 +13,7 @@ let ocrWorker;
 let stagedFile = null;
 
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba", "bir", "birçok", "bile", "da", "de", "den", "diğer", "diye", "eden", "eğer", "en", "gibi", "hem", "ile", "işte", "itibaren", "kadar", "karşın", "katrilyon", "kez", "ki", "kim", "kime", "kimi", "kimden", "kimeyi", "kimler", "kimlere", "kimleri", "kimlerden", "kimlereyi", "kiminin", "kimisi", "kimseye", "kırk", "otuz", "şimdi", "şey", "şöyle", "şu", "şunlar", "şurası", "tabii", "tam", "tüm", "ve", "veya", "ya", "yani", "yine", "yirmi", "yoksa", "çok", "çünkü", "üzere"
+    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba"
 ]);
 
 async function initializeOcrWorker() {
@@ -173,7 +173,7 @@ async function sendMessage() {
         userInput.value = '';
         userInput.focus();
         if (stagedFile) {
-            addMessage(`Eklediğiniz '${stagedFile.name}' görseli henüz işlenmedi. İşlemek için mesajınızda 'ocr' komutunu kullanmalısınız.`, "bot");
+            addMessage(`'${file.name}' eklendi.`, "bot");
         }
         setTimeout(() => {
             const botResponse = processUserInput(messageText);
@@ -183,7 +183,7 @@ async function sendMessage() {
     }
 
     if (messageText === '' && stagedFile) {
-        addMessage(`Eklediğiniz '${stagedFile.name}' görseli için ne yapmak istersiniz? İşlemek için mesajınızda 'ocr' komutunu kullanın.`, "bot");
+        addMessage(`'${file.name}' eklendi.`, "bot");
         userInput.focus();
         return;
     }
