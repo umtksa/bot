@@ -93,8 +93,8 @@ function processUserInput(input) {
                 // math.format ile sonucu istediğimiz hassasiyette formatlayalım
                 // notation: 'fixed' ile sabit ondalık basamak sayısı belirtilir
                 // precision: 1 ile virgülden sonra 1 basamak gösterilir
-                const formattedResult = math.format(result, { notation: 'fixed', precision: 1 });
-                return formattedResult; // Formatlanmış stringi döndür
+                //const formattedResult = math.format(result, { notation: 'fixed', precision: 1 });
+                return result.toString(); // Formatlanmış stringi döndür
 
             } else if (result && typeof result.toString === 'function') {
                 // Daha karmaşık math.js nesneleri için de toString() kullan
