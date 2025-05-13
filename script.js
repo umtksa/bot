@@ -77,7 +77,7 @@ async function loadBotData() {
             // 0.0 = tam eşleşme, 1.0 = tamamen farklı.
             // 0.2 - 0.4 arası başlangıç için denenebilir.
             // Önceki kodda 0.3 yapmıştık, sorun yanıt almada olduğu için 0.3 kalsın.
-            threshold: 0.3, // **BU DEĞERİ TEST EDEREK OPTİMİZE ETMELİSİN!**
+            threshold: 0.4, // **BU DEĞERİ TEST EDEREK OPTİMİZE ETMELİSİN!**
             // location: 0, // Aranacak metnin başından uzaklık
             // distance: 100, // Eşleşen karakterlerin maksimum mesafesi
             ignoreLocation: true, // Konumu önemseme (kelime sırası önemli değilse) - Çoğu chatbot sorusu için iyi
