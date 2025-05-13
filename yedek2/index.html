@@ -1,7 +1,3 @@
----
-File: /index.html
----
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -91,54 +87,32 @@ File: /index.html
             padding: 10px;
             border-top: 1px solid #ddd;
             background-color: #f9f9f9;
-            align-items: center; /* Elemanları dikeyde ortala */
         }
 
-        .chat-input input[type="text"] { /* Text input'u seç */
+        .chat-input input {
             flex-grow: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 20px;
             margin-right: 10px;
             outline: none;
+            /* iOS'ta input odaklandığında otomatik zoom'u engellemeye yardımcı olabilir */
             font-size: 16px; /* Genellikle 16px ve üzeri zoom'u tetiklemez */
-        }
-
-        /* Dosya inputunu gizle */
-        .chat-input input[type="file"] {
-            display: none;
         }
 
         .chat-input button {
             padding: 10px 15px;
+            background-color: #9a9a9a;
             color: white;
             border: none;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
-            /* Butonlar arası boşluk */
-            margin-right: 5px;
         }
 
-        /* Gönder butonu */
-        #sendButton {
-             background-color: #9a9a9a; /* Mevcut gri renk */
-             margin-right: 0; /* Sağında başka buton yok */
+        .chat-input button:hover {
+            background-color: #45a049;
         }
-
-        #sendButton:hover {
-             background-color: #45a049; /* Yeşil hover rengi */
-        }
-
-        /* Ekle butonu */
-        #attachButton {
-            background-color: #007bff; /* Mavi renk */
-        }
-
-        #attachButton:hover {
-            background-color: #0056b3; /* Koyu mavi hover rengi */
-        }
-
 
         @media (max-width: 768px) {
             .chat-container {
@@ -155,11 +129,6 @@ File: /index.html
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
             }
-             /* Mobil görünümde butonların padding'ini ayarlayabilirsiniz */
-             .chat-input button {
-                padding: 10px 12px;
-                font-size: 14px;
-             }
         }
     </style>
     <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
@@ -170,12 +139,11 @@ File: /index.html
 
     <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen OCR yapabilirim. Bunları tamamen offline şeyapıyorum. Dosya eklemek için ataş ikonuna tıklayabilirsiniz.</div>
+             <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, başkentler, ior numaraları falan hakimim, görsel sürüklersen OCR yapabilirim. Bunları tamamen offline şeyapıyorum.</div>
         </div>
         <div class="chat-input">
-            <input type="file" id="fileInput" accept="image/*"> <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
-
-            <button id="attachButton">🔗</button> <button id="sendButton">send</button>
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın veya görsel sürükleyin..." autofocus>
+            <button id="sendButton">send</button>
         </div>
     </div>
 
