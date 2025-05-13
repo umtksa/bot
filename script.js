@@ -13,7 +13,7 @@ let ocrWorker;
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
 // Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "ne", "kaç", "neresidir", "kodu", "numarası"
+    "nedir", "kaçtır", "ne", "kaç", "kodu", "numarası", "neresidir"
     // Daha fazla stopword ekleyebilirsin
 ]);
 // --- Stopword Listesi Sonu ---
@@ -54,12 +54,17 @@ async function loadBotData() {
              cleanedKey = cleanedKey.replace(/[.,!?;:]/g, ''); // Noktalamayı kaldır
              cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim(); // Birden fazla boşluğu tek boşluğa indirge
 
-             // İstersen burada cleanedKey'den stopwordleri de çıkarabilirsin
+             // data.json anahtarlarından stopwordleri ÇIKARMAYI seçiyoruz.
+             // Neden? Kullanıcı "Adana'nın plakası nedir" sorduğunda "adana plaka" temizlenir.
+             // Anahtar "adana plaka" ise Fuse doğrudan eşleştirir.
+             // Anahtar "adana plaka" iken ondan stopword "plaka"yı çıkarmak anlamsız olur.
+             // Stopword çıkarma sadece kullanıcı girdisinde yapılmalıdır.
              // const tokens = cleanedKey.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
              // cleanedKey = tokens.join(' ');
 
+
              return {
-                 cleanedKey: cleanedKey, // Fuse bu alanda arama yapacak
+                 cleanedKey: cleanedKey, // Fuse bu alanda arama yapacak (sadece temel temizlik yapıldı)
                  originalKey: originalKey // Biz bu anahtarı kullanarak botData'dan yanıtı alacağız
              };
          });
@@ -85,7 +90,7 @@ async function loadBotData() {
 
         // Fuse.js'i oluştururken arama yapılacak diziyi (searchableItems) ve seçenekleri veriyoruz
         fuse = new Fuse(searchableItems, options);
-        console.log("Fuse.js arama motoru başlatıldı. Aranabilir anahtarlar:", searchableItems.map(item => item.cleanedKey)); // Debug için temizlenmiş anahtarları da logla
+        console.log("Fuse.js arama motoru başlatıldı. Aranabilir temizlenmiş anahtarlar:", searchableItems.map(item => item.cleanedKey)); // Debug için temizlenmiş anahtarları da logla
 
     } catch (error) {
         console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
@@ -121,14 +126,21 @@ function cleanSearchTerm(input) {
     // Birden fazla boşluğu tek boşluğa indirge ve baştan/sondan boşlukları sil
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
-     // İstersen burada stopwordleri de çıkarabilirsin, ancak Fuse'un iç algoritmaları
-     // bazen stopwordler varken de iyi çalışabilir.
-     // Deneyerek karar verebilirsin. Şimdilik bu adımı atlıyoruz.
-     // const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
-     // cleaned = tokens.join(' ');
+     // --- Yeni: Stopwordleri çıkar ---
+     const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
+     cleaned = tokens.join(' ');
+     // --- Yeni Bitti ---
 
 
-    return cleaned;
+    // Eğer temizlenmiş arama terimi boşsa anlamlı bir girdi yok demektir
+    if (cleaned.length === 0) {
+         // Math.js de sonuç vermediyse buraya düşer.
+         // Fuse.js boş string ile arama yaparsa sonuç bulamaz, bu erken dönüş doğru.
+         return ""; // Boş string döndür ki processUserInput bunu algılayabilsin
+    }
+
+
+    return cleaned; // Temizlenmiş arama terimini döndür
 }
 
 
@@ -187,11 +199,12 @@ function processUserInput(input) {
 
     // Eğer temizlenmiş arama terimi boşsa anlamlı bir girdi yok demektir
     if (searchTerm.length === 0) {
-         // Math.js de sonuç vermediyse buraya düşer.
+         // Math.js de sonuç vermediyse ve arama terimi boşsa varsayılan yanıt
          return "Üzgünüm, ne sorduğunu anlayamadım.";
     }
 
     // Fuse.js ile arama yap
+    // cleanSearchTerm fonksiyonu boş string döndürmeyeceği için searchTerm.length > 0 kontrolü yeterli
     const results = fuse.search(searchTerm);
 
     console.log(`Searching for: "${searchTerm}"`); // Arama terimini konsola yazdır
@@ -201,7 +214,7 @@ function processUserInput(input) {
     // En iyi eşleşmeyi al (Fuse.js sonuçları puana göre sıralar, 0 en iyi puan)
     if (results.length > 0) {
         const bestMatch = results[0];
-        // --- BURASI DÜZELTİLDİ: Orijinal anahtarı alıyoruz ---
+        // Orijinal anahtarı alıyoruz (loadBotData'da searchableItems'e eklemiştik)
         const matchedOriginalKey = bestMatch.item.originalKey;
         const score = bestMatch.score; // Eşleşme puanı (0 ile 1 arası, 0 en iyi)
 
@@ -209,13 +222,12 @@ function processUserInput(input) {
         // Burada sadece bulunan en iyi sonucun puanını logluyoruz.
         console.log(`Best Fuse Match Original Key: "${matchedOriginalKey}" | Score: ${score.toFixed(4)}`);
 
-        // --- BURASI DÜZELTİLDİ: Orijinal anahtarı kullanarak yanıtı alıyoruz ---
+        // Orijinal anahtarı kullanarak yanıtı data.json'dan al
         let botResponse = botData[matchedOriginalKey];
 
-        // Eğer eşleşme bulundu ama yanıt boşsa (beklenmez, originalKey botData'dan gelmeli)
+        // Eğer eşleşme bulundu ama yanıt boşsa (bu hata normalde olmamalı)
         if (!botResponse) {
             console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
-            // Bu hata normalde olmamalı, eğer oluyorsa mantık hatası var demektir.
             return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
         }
 
