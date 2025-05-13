@@ -13,7 +13,7 @@ let ocrWorker;
 // Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
 // Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen"
+    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen"
     // Daha fazla stopword ekleyebilirsin
 ]);
 // --- Stopword Listesi Sonu ---
@@ -159,25 +159,12 @@ function cleanTextForDisplay(text) {
 
 // Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
 function processUserInput(input) {
-    // --- Math.js kısmı ---
+    // --- Math.js kısmı (Aynı) ---
     // Math için temizleme yaparken sadece virgülleri noktaya çevir
-    let cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
+    const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
     const hasNumber = /\d/.test(cleanedInputForMath);
-
-    // YENİ: "kaç" kelimesini "to" ile değiştirme mantığı
-    if (hasNumber && cleanedInputForMath.includes("kaç")) {
-        // "kaç" kelimesini "to" ile değiştir, ancak sadece birim dönüşümü gibi durumlarda mantıklı.
-        // Örnek: "15 cm kaç inç" -> "15 cm to inç"
-        // Kullanıcının "kaç tane elma var" gibi bir sorusu math.js'e gitmemeli.
-        // Bu kontrolü looksLikeMathOrUnitConversion ile birleştireceğiz.
-        // Şimdilik "kaç" kelimesini "to" ile değiştirelim.
-        cleanedInputForMath = cleanedInputForMath.replace(/\bkaç\b/g, 'to');
-        console.log("Math.js için 'kaç' -> 'to' dönüşümü yapıldı:", cleanedInputForMath);
-    }
-    // YENİ BİTTİ
-
     const looksLikeMathOrUnitConversion = hasNumber && (
-        cleanedInputForMath.includes(' to ') || // "to" içeriyorsa (bizim eklediğimiz veya kullanıcının yazdığı)
+        cleanedInputForMath.includes(' to ') ||
         /[+\-*/^()]/.test(cleanedInputForMath) ||
         cleanedInputForMath.includes('sqrt') ||
         cleanedInputForMath.includes('log') ||
@@ -189,11 +176,11 @@ function processUserInput(input) {
     if (looksLikeMathOrUnitConversion) {
         try {
             const result = math.evaluate(cleanedInputForMath);
-            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
+             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
                 return result.toString();
-            } else {
+             } else {
                 console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
-            }
+             }
         } catch (e) {
             console.warn("Math.js hesaplaması başarısız oldu:", e.message);
         }
