@@ -12,7 +12,7 @@ let ocrWorker;
 // Tesseract.js worker'ını başlatma fonksiyonu
 async function initializeOcrWorker() {
     // Bu mesajı konsola yazdırıyoruz, kullanıcıya değil.
-    console.log("OCR motoru başlatılıyor..."); 
+    console.log("OCR motoru başlatılıyor...");
     try {
         // 'tur' Türkçe dil paketi için. İhtiyaca göre başka diller de eklenebilir.
         // Örneğin: 'eng+tur' hem İngilizce hem Türkçe için.
@@ -20,11 +20,11 @@ async function initializeOcrWorker() {
         await ocrWorker.loadLanguage('tur+eng');
         await ocrWorker.initialize('tur+eng');
         // Bu mesajı da konsola yazdırıyoruz.
-        console.log("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz."); 
+        console.log("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz.");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
         // Hata mesajlarını kullanıcıya göstermek genellikle iyi bir uygulamadır.
-        addMessage("OCR şeyinde bir sıkıntı oldu!", "bot"); 
+        addMessage("OCR şeyinde bir sıkıntı oldu!", "bot");
     }
 }
 
@@ -77,12 +77,25 @@ function processUserInput(input) {
     );
 
     if (looksLikeMathOrUnitConversion) {
+        let mathInput = cleanedInput;
+
+        // Kullanıcı girdisindeki virgülleri noktalara çevir
+        // Bu işlem, sadece matematiksel bir ifadeye benzeyen girdilerde yapılır.
+        mathInput = mathInput.replace(/,/g, '.');
+
         try {
             // math.js doğrudan "12 inch to cm" veya "5 + 3" gibi ifadeleri işleyebilir
-            const result = math.evaluate(cleanedInput);
+            // Artık virgülleri noktaya çevirdiğimiz mathInput'u kullanıyoruz.
+            const result = math.evaluate(mathInput);
+
             // Math.js'in döndürebileceği farklı tipleri kontrol et (sayı, birim nesnesi vb.)
             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber) {
-                return result.toString(); // Sonucu string olarak döndür
+                // math.format ile sonucu istediğimiz hassasiyette formatlayalım
+                // notation: 'fixed' ile sabit ondalık basamak sayısı belirtilir
+                // precision: 1 ile virgülden sonra 1 basamak gösterilir
+                const formattedResult = math.format(result, { notation: 'fixed', precision: 1 });
+                return formattedResult; // Formatlanmış stringi döndür
+
             } else if (result && typeof result.toString === 'function') {
                 // Daha karmaşık math.js nesneleri için de toString() kullan
                 return result.toString();
@@ -173,7 +186,7 @@ async function performOcr(imageFile) {
     }
 
     // Spinner kaldırıldığı için mesajı güncelledik
-    //addMessage("biraz bekleticem...", "bot"); 
+    //addMessage("biraz bekleticem...", "bot");
     // ocrSpinner.style.display = 'block'; // Spinner kontrol satırı kaldırıldı
 
     try {
