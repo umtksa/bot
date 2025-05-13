@@ -272,20 +272,20 @@ async function performOcr(imageFile) {
         return;
     }
 
-    addMessage("Görsel işleniyor...", "bot");
+    //addMessage("Görsel işleniyor...", "bot");
 
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
 
         if (text && text.trim()) {
             // OCR sonucunu temizleyip gösterebilirsin
-            addMessage("Görseldeki metin:\n\n" + cleanTextForDisplay(text), "bot");
+            addMessage(cleanTextForDisplay(text), "bot");
         } else {
             addMessage("Görselde metin bulamadım!", "bot");
         }
     } catch (error) {
         console.error("OCR sırasında hata oluştu:", error);
-        addMessage("OCR yapılırken bir sorun oluştu!", "bot");
+        addMessage("OCR yapılırken bir sıkıntı oldu!", "bot");
     }
 }
 
