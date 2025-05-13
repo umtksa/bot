@@ -3,28 +3,30 @@
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const chatContainer = document.getElementById('chatContainer'); // chat-container elementini yakala
-// const ocrSpinner = document.getElementById('ocrSpinner'); // Spinner elemanı kaldırıldığı için bu satır da kaldırıldı.
 let botData = {}; // Yüklenen JSON verilerini depolamak için
 
 // Tesseract.js worker değişkeni
 let ocrWorker;
 
+// --- Türkçe Stopword Listesi ---
+// Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
+const turkishStopwords = new Set([
+    "a", "acaba", "altı", "altmış", "ama", "ancak", "arada", "aslında", "ayrıca", "bana", "bazı", "bazıları", "belki", "ben", "benden", "beni", "benim", "beri", "beş", "bile", "bin", "bir", "biraz", "biri", "birkaç", "birşey", "biz", "bizden", "bize", "bizi", "bizim", "böyle", "böylece", "bu", "buna", "bunda", "burada", "bunu", "bunun", "çoğu", "çoğuna", "çoğunu", "çok", "çünkü", "da", "daha", "dahi", "de", "den", "derece", "diğer", "diğeri", "diğerleri", "doksan", "dokuz", "dolayı", "dört", "eğer", "elli", "en", "etmek", "etti", "ettiği", "ettik", "ettiğini", "ettiyseniz", "edecek", "eden", "eder", "ediyor", "edesin", "etmiş", "etmek", "etmiyor", "etmişsiniz", "etmez", "eylemeden", "edenler", "eylesem", "eyle", "fakat", "falan", "filan", "galiba", "gel", "gelir", "gibi", "göre", "görece", "göreceli", "görünüşe", "halde", "hala", "hangi", "hangisi", "hani", "haricinde", "hariç", "hatta", "hem", "henüz", "hep", "hepsi", "her", "herhangi", "herkes", "herkese", "herkesi", "herkesin", "hiç", "hiçbir", "hiçbiri", "için", "içinde", "iki", "ile", "ilgili", "ise", "işte", "itibaren", "itibariyle", "kaç", "kadar", "karşın", "katrilyon", "kendi", "kendine", "kendinden", "kendini", "kendisi", "kendisine", "kendisini", "kendilerinin", "kendi", "kime", "kimden", "kimi", "kimse", "kırk", "köken", "madem", "mademki", "masaüstü", "meğer", "milyar", "milyon", "mi", "mu", "mü", "nasıl", "nasılsa", "ne", "neden", "nedense", "nerde", "nereden", "nereye", "nesi", "neyse", "niçin", "niye", "o", "ondan", "onlar", "onlardan", "onları", "onların", "onu", "onun", "otuz", "oysa", "oysaki", "pek", "rağmen", "sana", "sanki", "sen", "senden", "seni", "senin", "seksen", "seksenbir", "şayet", "şey", "şeyden", "şeye", "şeyler", "şeyi", "şeyin", "şöyle", "şu", "şuna", "şunlar", "şunu", "şunun", "ta", "tabii", "tamam", "tamamen", "tıpkı", "trilyon", "tüm", "tümü", "üzere", "var", "vardı", "varken", "ve", "veya", "yahut", "ya", "yani", "yapacak", "yapılan", "yapmak", "yaptı", "yaptığı", "yaptığını", "yaptıkları", "yaptıktan", "yaptırdıktan", "yaptırılmaktadır", "yaptırmalı", "yaptırmasa", "yaptırmasın", "yaptırmıştır", "yapıyor", "yapıyorlar", "yapmadınmı", "yapamam", "yapamazsın", "yapabilir", "yapabilirim", "yapabilirsin", "yapabiliriz", "yapabilirsiniz", "yapabilirler", "yapmalıyım", "yapmalısın", "yapmalı", "yapmalıyız", "yapmalısınız", "yapmalılar", "yapmam", "yapmamalısın", "yapmamalıyız", "yapmaz", "yapıyorum", "yapıyorsun", "yapıyor", "yapıyoruz", "yapıyorsunuz", "yapıyorlar", "yine", "yirmi", "yüz", "zaten", "zira"
+]);
+// --- Stopword Listesi Sonu ---
+
 // Tesseract.js worker'ını başlatma fonksiyonu
 async function initializeOcrWorker() {
-    // Bu mesajı konsola yazdırıyoruz, kullanıcıya değil.
     console.log("OCR motoru başlatılıyor...");
     try {
-        // 'tur' Türkçe dil paketi için. İhtiyaca göre başka diller de eklenebilir.
-        // Örneğin: 'eng+tur' hem İngilizce hem Türkçe için.
+        // 'tur' Türkçe, 'eng' İngilizce dil paketleri için. İhtiyaca göre başka diller de eklenebilir.
         ocrWorker = await Tesseract.createWorker('tur+eng');
         await ocrWorker.loadLanguage('tur+eng');
         await ocrWorker.initialize('tur+eng');
-        // Bu mesajı da konsola yazdırıyoruz.
         console.log("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz.");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
-        // Hata mesajlarını kullanıcıya göstermek genellikle iyi bir uygulamadır.
-        addMessage("OCR şeyinde bir sıkıntı oldu!", "bot");
+        addMessage("OCR motoru başlatılırken bir sorun oluştu.", "bot");
     }
 }
 
@@ -36,11 +38,10 @@ async function loadBotData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         botData = await response.json();
-        console.log("Bot verileri başarıyla yüklendi:", botData); // Bu mesaj da konsola yazdırılıyor.
+        console.log("Bot verileri başarıyla yüklendi."); // Konsol mesajı
     } catch (error) {
         console.error("Bot verileri yüklenirken bir hata oluştu:", error);
-        // Hata mesajlarını kullanıcıya göstermek genellikle iyi bir uygulamadır.
-        addMessage("Veriler yüklenirken bir sıkıntı oldu!", "bot");
+        addMessage("Veriler yüklenirken bir sorun oluştu.", "bot");
     }
 }
 
@@ -54,95 +55,148 @@ function addMessage(text, sender) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// --- Güncellendi: Metni temizleme, tokenlara ayırma ve stopword'leri çıkarma fonksiyonu ---
+function cleanAndTokenize(text, removeStopwords = true) {
+    if (!text) return []; // Boş veya tanımsız metin gelirse boş dizi döndür
+
+    // Küçük harf yap
+    const cleanedText = text.toLowerCase();
+
+    // Kesme işaretini kaldır (')
+    const textWithoutApostrophes = cleanedText.replace(/'/g, '');
+
+    // Noktalama işaretlerini (virgül dahil) ve diğer özel karakterleri boşluğa çevir,
+    // ardından metni kelimelere (tokenlara) ayır.
+    const tokens = textWithoutApostrophes
+        .replace(/[.,!?;:\s]+/g, ' ') // Noktalama ve birden fazla boşluğu tek boşluğa çevir
+        .trim() // Baştaki ve sondaki boşlukları sil
+        .split(' ') // Tek boşluğa göre ayır
+        .filter(word => word.length > 0); // Boş stringleri filtrele
+
+    if (removeStopwords) {
+        return tokens.filter(token => !turkishStopwords.has(token));
+    }
+    return tokens;
+}
+
+// --- Yeni: Jaccard Index hesaplama fonksiyonu ---
+// İki token dizisi arasındaki Jaccard benzerliğini hesaplar.
+function getJaccardIndex(tokens1, tokens2) {
+    if (!tokens1 || !tokens2 || tokens1.length === 0 || tokens2.length === 0) {
+        // Kümelerden biri boşsa benzerlik 0'dır.
+        // Ancak kullanıcı girdisi boş değil, sadece stopword'lerden oluşuyorsa,
+        // bu durumda karşılaştıracak bir şey olmadığı için 0 döndürmek mantıklıdır.
+         if (tokens1.length === 0 && tokens2.length === 0) return 1; // İkisi de boşsa %100 benzerlik gibi düşünülebilir
+         return 0;
+    }
+
+    // Token dizilerini Set'lere dönüştür (benzersiz kelimeler için)
+    const set1 = new Set(tokens1);
+    const set2 = new Set(tokens2);
+
+    // Kesişim kümesini bul
+    const intersection = new Set([...set1].filter(token => set2.has(token)));
+
+    // Birleşim kümesini bul
+    const union = new Set([...set1, ...set2]);
+
+    // Jaccard Index'i hesapla: Kesişim boyutu / Birleşim boyutu
+    // Birleşim kümesi boşsa (iki küme de boşsa) 0'a bölme hatasını engelle
+     if (union.size === 0) return 0;
+
+    const jaccard = intersection.size / union.size;
+
+    return jaccard;
+}
+
+
 // Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
 function processUserInput(input) {
-    const cleanedInput = input.toLowerCase().normalize("NFC");
-    const inputTokens = cleanedInput.split(/\s+/).filter(word => word.length > 0);
-
-    // --- Yeni: Math.js ile matematiksel ifadeleri ve birim çevirmelerini işle ---
-    // Girişte bir sayı ve olası bir matematik/birim anahtar kelime var mı kontrol et
-    const hasNumber = /\d/.test(cleanedInput);
+    // --- Math.js kısmı (Bu kısım değişmedi, önce matematik kontrolü hala mantıklı) ---
+    // Matematik için temizleme yaparken sadece virgülleri noktaya çevir, diğer işlemleri Math.js yapsın
+    const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
+    const hasNumber = /\d/.test(cleanedInputForMath);
+    // Matematiksel veya birim çevirme gibi görünen ifadeler için kontrol
     const looksLikeMathOrUnitConversion = hasNumber && (
-        cleanedInput.includes(' to ') || // "inch to cm" gibi
-        cleanedInput.includes('+') ||
-        cleanedInput.includes('-') ||
-        cleanedInput.includes('*') ||
-        cleanedInput.includes('/') ||
-        cleanedInput.includes('^') || // Üs alma
-        cleanedInput.includes('sqrt') || // Karekök
-        cleanedInput.includes('log') || // Logaritma
-        cleanedInput.includes('sin') || // Trigonometrik fonksiyonlar
-        cleanedInput.includes('cos') ||
-        cleanedInput.includes('tan')
+        cleanedInputForMath.includes(' to ') || // Birim çevirme gibi
+        /[+\-*/^()]/.test(cleanedInputForMath) || // Basit matematiksel operatörler
+        cleanedInputForMath.includes('sqrt') ||
+        cleanedInputForMath.includes('log') ||
+        cleanedInputForMath.includes('sin') ||
+        cleanedInputForMath.includes('cos') ||
+        cleanedInputForMath.includes('tan')
     );
 
     if (looksLikeMathOrUnitConversion) {
-        let mathInput = cleanedInput;
-
-        // Kullanıcı girdisindeki virgülleri noktalara çevir
-        // Bu işlem, sadece matematiksel bir ifadeye benzeyen girdilerde yapılır.
-        mathInput = mathInput.replace(/,/g, '.');
-
         try {
-            // math.js doğrudan "12 inch to cm" veya "5 + 3" gibi ifadeleri işleyebilir
-            // Artık virgülleri noktaya çevirdiğimiz mathInput'u kullanıyoruz.
-            const result = math.evaluate(mathInput);
-
-            // Math.js'in döndürebileceği farklı tipleri kontrol et (sayı, birim nesnesi vb.)
-            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber) {
-                // math.format ile sonucu istediğimiz hassasiyette formatlayalım
-                // notation: 'fixed' ile sabit ondalık basamak sayısı belirtilir
-                // precision: 1 ile virgülden sonra 1 basamak gösterilir
-                //const formattedResult = math.format(result, { notation: 'fixed', precision: 1 });
-                return result.toString(); // Formatlanmış stringi döndür
-
-            } else if (result && typeof result.toString === 'function') {
-                // Daha karmaşık math.js nesneleri için de toString() kullan
-                return result.toString();
-            } else {
-                // math.js geçerli bir sonuç döndürmedi ancak hata da fırlatmadı (nadiren olabilir)
+            const result = math.evaluate(cleanedInputForMath);
+             // math.js geçerli bir sayı, birim, kompleks sayı veya BigNumber döndürdüyse
+             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
+                return result.toString(); // Sonucu string olarak döndür
+             } else {
+                // math.evaluate hata fırlatmadı ama tanımsız/geçersiz bir şey döndürdü
                 console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
-            }
+                // JSON aramasına devam etmek için burayı atla
+             }
         } catch (e) {
-            // math.js geçerli bir ifade bulamazsa hata fırlatır
+            // math.js geçerli bir ifade bulamazsa veya hesaplama hatası olursa hata fırlatır
             console.warn("Math.js hesaplaması başarısız oldu:", e.message);
             // Bu durumda, varsayılan olarak JSON veri tabanında arama yapmaya devam et
         }
     }
     // --- Math.js kısmı sonu ---
-    // Mevcut: data.json lookup (matematiksel ifade değilse veya math.js hata verirse)
+
+
+    // --- JSON data.json Lookup (Jaccard Index ile) ---
+    // Kullanıcı girdisini temizle ve tokenlara ayır (stopwords çıkarılmış)
+    const userInputTokensFiltered = cleanAndTokenize(input, true);
+
+    // Eğer kullanıcı girdisi temizlendikten ve stopword'ler çıkarıldıktan sonra boşsa,
+    // anlamlı bir soru sorulmamıştır.
+    if (userInputTokensFiltered.length === 0) {
+         // Math.js de sonuç vermediyse buraya düşer.
+        return "Üzgünüm, ne sorduğunu anlayamadım.";
+    }
+
+
     let bestMatchScore = 0;
     let bestMatchResponse = "Üzgünüm, sorunuzu tam olarak anlayamadım."; // Varsayılan yanıt
+    // Eşik değeri: Jaccard Index'in en az bu kadar olması durumunda yanıtı kabul et.
+    // Bu değeri test ederek ayarlayabilirsin. 0.2 - 0.4 arası başlangıç için makul olabilir.
+    const responseThreshold = 0.2; // Jaccard Index için eşik değeri (0-1 arası)
+
 
     // Her bir data.json anahtarını (soru şablonunu) kontrol et
     for (const key in botData) {
-        // Anahtarı küçük harfe çevir, virgüllerden ayır ve boşlukları temizle
-        const normalizedKey = key.toLowerCase().normalize("NFC");
-        const keyWords = normalizedKey.split(',').map(word => word.trim()).filter(word => word.length > 0);
+        // Anahtar metnini alıp temizle ve tokenlara ayır (stopwords çıkarılmış)
+        // data.json anahtarları virgülle ayrılmıştı, cleanAndTokenize bunu artık içeriyor
+        const keyTokensFiltered = cleanAndTokenize(key, true);
 
-        if (keyWords.length === 0) continue; // Boş anahtarları atla
+        // Anahtarın kendisi stopword'lerden oluşuyorsa veya boşsa atla
+        if (keyTokensFiltered.length === 0) continue;
 
-        let matchCount = 0;
-        // Anahtar kelimelerin kullanıcı girdisinde olup olmadığını kontrol et
-        for (const keyWord of keyWords) {
-            // inputToken.includes(keyWord) kullanarak esnek eşleşme sağlarız.
-            // Örneğin, "plakası" içinde "plaka"yı bulur.
-            const foundInInput = inputTokens.some(inputToken => inputToken.includes(keyWord));
-            if (foundInInput) {
-                matchCount++;
-            }
-        }
+        // --- Yeni: Jaccard Index'i hesapla ---
+        const currentScore = getJaccardIndex(userInputTokensFiltered, keyTokensFiltered);
 
-        const currentScore = matchCount / keyWords.length;
+        // Konsola her anahtar için skoru yazdırmak debug için faydalı olabilir
+        // console.log(`Key: "${key}" -> Filtered Tokens: [${keyTokensFiltered.join(', ')}] | User Tokens: [${userInputTokensFiltered.join(', ')}] | Jaccard Score: ${currentScore.toFixed(2)}`);
 
         // Daha iyi bir eşleşme bulunursa güncelle
-        if (currentScore > bestMatchScore) {
+        // Eşik değeri üzerinde ve mevcut en iyi skordan yüksek olmalı
+        if (currentScore > bestMatchScore && currentScore >= responseThreshold) {
             bestMatchScore = currentScore;
             bestMatchResponse = botData[key];
         }
+         // Eğer mükemmel bir eşleşme (score 1.0) bulursak aramayı durdurabiliriz
+         if (bestMatchScore === 1.0) break;
     }
 
+    // Konsola bulunan en iyi skoru yazdır
+    console.log(`Final Best Match Score: ${bestMatchScore.toFixed(2)}`);
+
     // Yanıtın dinamik içeriğini (saat, tarih) güncelle
+    // Eğer hiç eşleşme bulunamazsa (bestMatchScore < responseThreshold), varsayılan yanıt kullanılır,
+    // ancak onda {{placeholder}} olmadığı için bu satırlar sorun çıkarmaz.
     if (bestMatchResponse.includes('{{currentTime}}')) {
         bestMatchResponse = bestMatchResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
     }
@@ -150,15 +204,17 @@ function processUserInput(input) {
         bestMatchResponse = bestMatchResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
     }
 
-    // Minimum bir güven puanı eşiği belirleyebilirsiniz.
-    // Örneğin, %30'dan az eşleşme varsa varsayılan mesajı döndür.
-    const responseThreshold = 0.4;
+    // Eğer en iyi skor eşik değerinin altındaysa, varsayılan 'anlayamadım' yanıtını kullan
     if (bestMatchScore < responseThreshold) {
-        return `tam olarak anlayamadım.`;
+         // bestMatchResponse zaten varsayılan 'anlayamadım' mesajı olarak ayarlanmıştı
+         // ancak buraya tekrar açıkça belirtebiliriz veya varsayılanı kullanmaya devam ederiz.
+         // Şimdiki kod varsayılanı döndürecek.
     }
 
-    return `${bestMatchResponse}`;
+
+    return bestMatchResponse; // Hesaplanan en iyi yanıtı döndür
 }
+
 
 // Mesaj gönderme fonksiyonu
 async function sendMessage() {
@@ -172,40 +228,40 @@ async function sendMessage() {
     userInput.value = ''; // Giriş alanını temizle
 
     // Bot yanıtını bir gecikmeyle işle ve ekle (yazıyormuş gibi bir his verir)
+    // Spinner kaldırıldığı için yerine küçük bir gecikme koymak iyi
     setTimeout(() => {
         const botResponse = processUserInput(messageText);
         addMessage(botResponse, 'bot');
-    }, 300 + Math.random() * 300);
+    }, 300 + Math.random() * 500); // Gecikme süresini biraz artırabilirsin
 }
 
-// OCR işlemini gerçekleştiren fonksiyon
+// OCR işlemini gerçekleştiren fonksiyon (Bu fonksiyon değişmedi)
 async function performOcr(imageFile) {
     if (!ocrWorker) {
-        addMessage("Bi saniye OCR şeyi hazır değil!", "bot");
+        addMessage("OCR motoru henüz hazır değil!", "bot");
         return;
     }
 
-    // Spinner kaldırıldığı için mesajı güncelledik
-    //addMessage("biraz bekleticem...", "bot");
-    // ocrSpinner.style.display = 'block'; // Spinner kontrol satırı kaldırıldı
+    addMessage("Görsel işleniyor...", "bot"); // OCR başladığında mesaj
+    // ocrSpinner.style.display = 'block'; // Spinner kaldırıldı
 
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
-        // ocrSpinner.style.display = 'none'; // Spinner kontrol satırı kaldırıldı
+        // ocrSpinner.style.display = 'none'; // Spinner kaldırıldı
 
-        if (text.trim()) {
-            addMessage(text, "bot");
+        if (text && text.trim()) { // text null veya undefined olabilir kontrolü eklendi
+            addMessage("Görseldeki metin:\n\n" + text.trim(), "bot"); // OCR sonucunu belirt
         } else {
             addMessage("Görselde metin bulamadım!", "bot");
         }
     } catch (error) {
         console.error("OCR sırasında hata oluştu:", error);
-        // ocrSpinner.style.display = 'none'; // Spinner kontrol satırı kaldırıldı
-        addMessage("OCR yaparken bi sıkıntı oldu!", "bot");
+        // ocrSpinner.style.display = 'none'; // Spinner kaldırıldı
+        addMessage("OCR yapılırken bir sorun oluştu!", "bot");
     }
 }
 
-// Sürükle-Bırak Olayları
+// Sürükle-Bırak Olayları (Bu kısım değişmedi)
 
 // Sürükleme sırasında görsel geri bildirim vermek için
 chatContainer.addEventListener('dragover', (e) => {
