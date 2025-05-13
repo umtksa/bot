@@ -198,11 +198,11 @@ async function performOcr(imageFile) {
         addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
         return;
     }
-    addMessage(`OCR şeyapılıyor...`, "bot");
+    //addMessage(`OCR...`, "bot");
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
         if (text && text.trim()) {
-            addMessage(`'${cleanTextForDisplay(text)}`, "bot");
+            addMessage(`${cleanTextForDisplay(text)}`, "bot");
         } else {
             addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
         }
