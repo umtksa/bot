@@ -10,11 +10,7 @@ const sendButton = document.getElementById('sendButton');
 function displayMessage(message, sender) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', `${sender}-message`);
-    // HTML etiketlerini temizlemek için textContent kullanıyoruz
-    messageElement.textContent = message; // Güvenlik için textContent kullanın
-    // Eğer RiveScript'te HTML kullanacaksanız innerHTML kullanabilirsiniz, dikkatli olun
-    // messageElement.innerHTML = message;
-
+    messageElement.textContent = message;
     chatMessages.appendChild(messageElement);
     // En alta kaydır
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -22,11 +18,9 @@ function displayMessage(message, sender) {
 
 // RiveScript'i yükle
 // brain.rive dosyasının yüklenmesini bekleyin
-// Bot yüklendiğinde başlangıç mesajını gösterelim
 bot.loadFile("brain.rive").then(() => {
     console.log("RiveScript loaded!");
     bot.sortReplies(); // RiveScript'in yanıtları sıralamasını sağla
-    // Bot yüklendikten hemen sonra veya kısa bir gecikmeyle hoş geldin mesajı
     displayMessage("Merhaba! Ben RiveScript botuyum. Nasıl yardımcı olabilirim?", "bot");
 
 }).catch(error => {
@@ -44,33 +38,24 @@ async function sendMessage() {
         return; // Boş mesaj gönderme
     }
 
-    // 1. Kullanıcı mesajını hemen göster
+    // Kullanıcı mesajını göster
     displayMessage(message, "user");
 
     // Giriş alanını temizle
     userInput.value = "";
-    userInput.disabled = true; // Kullanıcı yeni bir mesaj yazarken botun yanıtı bekleniyor gibi göstermek için devre dışı bırak
 
-    // 2. Bot yanıtı için rastgele gecikmeyi hesapla
-    const delay = 300 + Math.random() * 500; // 300ms ile 800ms arasında rastgele gecikme
+    // RiveScript'ten yanıt al (await kullanarak asenkron işlemi bekle)
+    try {
+        const reply = await bot.reply("local-user", message); // "local-user" kullanıcı ID'si
 
-    // 3. Gecikmeden sonra bot yanıtını al ve göster
-    setTimeout(async () => {
-        try {
-            // RiveScript'ten yanıt al
-            const reply = await bot.reply("local-user", message); // "local-user" kullanıcı ID'si
-
-            // Bot yanıtını göster
-            displayMessage(reply, "bot");
-        } catch (error) {
-            console.error("Error getting RiveScript reply:", error);
-            displayMessage("Üzgünüm, bir hata oluştu. Tekrar deneyin.", "bot");
-        } finally {
-            // Bot yanıtı geldikten veya hata oluştuğunda giriş alanını tekrar etkinleştir
-            userInput.disabled = false;
-            userInput.focus(); // Giriş alanına odaklan
-        }
-    }, delay);
+        // Bot yanıtını göster
+        // Yanıt gelmeden önce bir "..." gösterilebilir, isteğe bağlı
+        // Örneğin: displayMessage("...", "bot"); sonra güncelleyebilirsiniz.
+        displayMessage(reply, "bot");
+    } catch (error) {
+        console.error("Error getting RiveScript reply:", error);
+        displayMessage("Üzgünüm, bir hata oluştu. Tekrar deneyin.", "bot");
+    }
 }
 
 // Gönderme butonuna tıklama olayını dinle
