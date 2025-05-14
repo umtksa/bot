@@ -1,210 +1,249 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const chatMessages = document.getElementById('chatMessages');
-    const userInput = document.getElementById('userInput');
-    const sendButton = document.getElementById('sendButton');
+const chatMessages = document.getElementById('chatMessages');
+const userInput = document.getElementById('userInput');
+const sendButton = document.getElementById('sendButton');
+const fileInput = document.getElementById('fileInput');
+const fileInputLabel = document.querySelector('.file-input-label');
+const chatContainer = document.getElementById('chatContainer');
 
-    let botRules = []; // Yüklenen ve işlenen kurallar burada saklanacak
+let botData = {};
+let fuse;
+let ocrWorker;
+let stagedFile = null;
 
-    // Mesajı sohbet kutusuna ekleyen fonksiyon (Değişmedi)
-    function addMessage(text, sender) {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        msgDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-        msgDiv.textContent = text; // Güvenlik için textContent kullanın
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Sohbeti en alta kaydır
+const turkishStopwords = new Set([
+    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "ahrazcım", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba", "ben"
+]);
+
+async function initializeOcrWorker() {
+    console.log("OCR motoru başlatılıyor...");
+    try {
+        ocrWorker = await Tesseract.createWorker('tur+eng');
+        await ocrWorker.loadLanguage('tur+eng');
+        await ocrWorker.initialize('tur+eng');
+        console.log("OCR motoru hazır. Ataç simgesiyle görsel ekleyebilirsiniz.");
+    } catch (error) {
+        console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
+        addMessage("OCR motoru başlatılırken bir sorun oluştu.", "bot");
     }
+}
 
-    // Kullanıcının girdisine göre bot cevabını bulan fonksiyon (Değişmedi)
-    function getBotResponse(input) {
-        const lowerInput = input.toLowerCase(); // Girdiyi küçük harfe çevir
-
-        for (const rule of botRules) {
-            // Regex desenini test et (küçük harfe çevrilmiş girdi ile)
-            if (rule.pattern.test(lowerInput)) {
-                const randomIndex = Math.floor(Math.random() * rule.responses.length);
-                return rule.responses[randomIndex];
-            }
+async function loadBotData() {
+    try {
+        const response = await fetch('data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // Bu kısma düşmemeli çünkü en sonda (.*) kuralı var, ama yine de:
-        return "Bir hata oluştu (getBotResponse).";
-    }
+        botData = await response.json();
+        console.log("Bot verileri başarıyla yüklendi.");
 
-    // Mesaj gönderme işlemini başlatan fonksiyon (Değişmedi)
-    function sendMessage() {
-        const input = userInput.value.trim();
-        if (input === "") return;
-
-        addMessage(input, 'user');
-        userInput.value = '';
-
-        const botResponse = getBotResponse(input);
-        setTimeout(() => {
-            addMessage(botResponse, 'bot');
-        }, 300);
-
-        userInput.focus();
-    }
-
-    // --- Özel söz dizimi pattern stringini standart Regex source stringine çeviren yardımcı fonksiyon ---
-    function convertCustomPatternToRegexSource(customPattern) {
-        // customPattern: "(grup1) [grup2] (grup3)" gibi bir string
-        const parts = customPattern.match(/\(([^)]+)\)|\[([^\]]+)\]|\S+/g); // () veya [] içindekileri veya boşluk olmayan kelimeleri yakala
-
-        if (!parts) {
-             console.warn("Warning: Could not parse any parts from custom pattern:", customPattern);
-             return null; // Geçersiz desen
-        }
-
-        const regexParts = parts.map(part => {
-            if (part.startsWith('(') && part.endsWith(')')) {
-                const content = part.slice(1, -1); // Parantez içini al
-                // Zorunlu grup: (?:...) non-capturing group
-                 if (content.trim() === '') {
-                     console.warn("Warning: Empty required group () in pattern:", customPattern);
-                     // Boş zorunlu grup teknik olarak (?:) olur, ama muhtemelen hata. Yine de geçerli regex.
-                 }
-                return `(?:${content})`;
-            } else if (part.startsWith('[') && part.endsWith(']')) {
-                const content = part.slice(1, -1); // Köşeli parantez içini al
-                // İsteğe bağlı grup: (?:...)? non-capturing group ve komple optional
-                 if (content.trim() === '') {
-                     console.warn("Warning: Empty optional group [] in pattern:", customPattern);
-                     // Boş isteğe bağlı grup teknik olarak (?:)? olur, geçerli regex.
-                 }
-                return `(?:${content})?`;
-            } else {
-                // Beklenmedik format veya literal kelime - Regex özel karakterlerini kaçır
-                console.warn("Warning: Unexpected part format in custom pattern, treating as literal:", part, "in", customPattern);
-                // . + ? ^ $ { } ( ) | [ ] \ karakterlerini kaçır
-                 return part.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-            }
-        }).filter(part => part !== null); // Hata durumunda null dönenleri filtrele
-
-        // Parçaları bir veya daha fazla boşluk (\s+) ile birleştir
-        // Optional: Başına ve sonuna kelime sınırı (\b) ekleyebiliriz,
-        // ancak şimdilik sadece boşluklarla birleştirelim,
-        // input'u küçük harfe çevirip test etmek çoğunlukla yeterli.
-        let regexSource = regexParts.join('\\s+');
-
-        // Optional: Cümlenin başı ve sonuyla tam eşleşme istersen ^ ve $ eklersin.
-        // Ama örnekler cümle ortasını da içerdiği için eklemeyelim.
-
-        // Optional: Sondaki olası noktalama işaretlerini ve boşlukları yakala
-         regexSource += '\\s*[?.!]?';
-
-
-        return regexSource;
-    }
-
-    // --- brain.txt dosyasını yükle ve parse et ---
-    fetch('brain.txt')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(text => {
-            const lines = text.split(/\r?\n/); // Satırlara ayır
-            let currentCustomPattern = null;
-            let currentResponses = [];
-            const parsedRules = []; // Geçici olarak parse edilmiş kuralları tutar (custom pattern string olarak)
-
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (trimmedLine === '' || trimmedLine.startsWith('#')) continue;
-
-                if (trimmedLine.startsWith('+')) {
-                    // Yeni bir pattern satırı geldi
-                    // Eğer daha önce bir pattern topluyorsak ve cevapları varsa, kuralı kaydet
-                    if (currentCustomPattern !== null && currentResponses.length > 0) {
-                         parsedRules.push({
-                             customPattern: currentCustomPattern,
-                             responses: currentResponses
-                         });
-                    }
-
-                    // Yeni pattern'ı başlat
-                    currentCustomPattern = trimmedLine.substring(1).trim();
-                    currentResponses = []; // Cevapları sıfırla
-
-                } else if (trimmedLine.startsWith('-')) {
-                    // Cevap satırı geldi
-                    if (currentCustomPattern !== null) {
-                        currentResponses.push(trimmedLine.substring(1).trim());
-                    } else {
-                         console.warn("Uyarı: Bir pattern tanımlanmadan cevap satırı geldi:", trimmedLine);
-                    }
-
-                } else {
-                    console.warn("Uyarı: Bilinmeyen satır formatı yoksayıldı:", trimmedLine);
-                }
-            }
-
-            // Döngü bittikten sonra son kuralı kaydet
-            if (currentCustomPattern !== null && currentResponses.length > 0) {
-                parsedRules.push({
-                    customPattern: currentCustomPattern,
-                    responses: currentResponses
-                });
-            }
-
-            // ParsedRules'u botRules'a dönüştür: custom pattern stringlerini RegExp nesnelerine çevir
-            botRules = parsedRules.map(rule => {
-                try {
-                    // Özel söz dizimi stringini standart regex source stringine çevir
-                    const regexSource = convertCustomPatternToRegexSource(rule.customPattern);
-
-                    if (!regexSource) {
-                        console.error("Error: Failed to convert custom pattern to regex source:", rule.customPattern);
-                        return null; // Dönüşüm başarısızsa kuralı atla
-                    }
-
-                    // Regex source'u RegExp nesnesine çevir, varsayılan olarak case-insensitive ('i')
-                    const regexPattern = new RegExp(regexSource, 'i');
-
-                     if (rule.responses.length === 0) {
-                         console.warn("Warning: Parsed rule has empty responses:", rule);
-                         return null;
-                    }
-
-                    return {
-                        pattern: regexPattern, // Bu, RegExp nesnesi
-                        responses: rule.responses // Bu, cevaplar dizisi
-                    };
-                } catch (e) {
-                    console.error("Error creating RegExp from source:", regexSource, "Original custom pattern:", rule.customPattern, "Error:", e);
-                    return null; // RegExp oluşturma hatası varsa kuralı atla
-                }
-            }).filter(rule => rule !== null); // Hatalı veya boş cevaplı kuralları filtrele
-
-            console.log("Bot kuralları başarıyla yüklendi ve işlendi:", botRules);
-
-            // Kurallar yüklendikten sonra olay dinleyicilerini ayarla
-            sendButton.addEventListener('click', sendMessage);
-
-            userInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    sendMessage();
-                }
-            });
-
-            // Bot'tan ilk mesaj (opsiyonel)
-             setTimeout(() => {
-                 addMessage("Merhaba! Size nasıl yardımcı olabilirim?", 'bot');
-             }, 500);
-
-        })
-        .catch(error => {
-            console.error('Bot kuralları yüklenirken bir hata oluştu:', error);
-            addMessage(`Üzgünüm, bot kuralları yüklenemedi: ${error.message}`, 'bot');
-            // Hata durumunda giriş alanını ve butonu devre dışı bırak
-            sendButton.disabled = true;
-            userInput.disabled = true;
-            userInput.placeholder = "Bot devre dışı";
+        const searchableItems = Object.keys(botData).map(originalKey => {
+            let cleanedKey = originalKey.toLowerCase().normalize("NFC");
+            cleanedKey = cleanedKey.replace(/'[^\\s]+/g, '');
+            cleanedKey = cleanedKey.replace(/[.,!?;:]/g, '');
+            cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim();
+            return {
+                cleanedKey: cleanedKey,
+                originalKey: originalKey
+            };
         });
-    // --- Yükleme sonu ---
 
+        const options = {
+            includeScore: true,
+            keys: ['cleanedKey'],
+            threshold: 0.4,
+            ignoreLocation: true,
+        };
+        fuse = new Fuse(searchableItems, options);
+        console.log("Fuse.js arama motoru başlatıldı.");
+    } catch (error) {
+        console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
+        addMessage("json şeyoldu!", "bot");
+    }
+}
+
+function addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', `${sender}-message`);
+    messageDiv.style.whiteSpace = 'pre-line'; // Bu satır \n karakterlerini işler
+    messageDiv.textContent = text;
+    chatMessages.appendChild(messageDiv);
+    setTimeout(() => {
+        messageDiv.style.opacity = 1;
+        messageDiv.style.transform = 'translateY(0)';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 10);
+}
+
+function cleanSearchTerm(input) {
+    if (!input) return "";
+    let cleaned = input.toLowerCase().normalize("NFC");
+    cleaned = cleaned.replace(/'[^\\s]+/g, '');
+    cleaned = cleaned.replace(/[.,!?;:]/g, '');
+    cleaned = cleaned.replace(/[^a-z0-9ğüşöçİı\s+\-*/^.]/g, '');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
+    cleaned = tokens.join(' ');
+    if (cleaned.length === 0) {
+        return "";
+    }
+    return cleaned;
+}
+
+// Bu fonksiyon sadece kullanıcı girdilerindeki gereksiz boşlukları temizlemek için kullanılacak.
+// Örneğin, "  merhaba   dünya  " girdisini "merhaba dünya" yapar.
+function cleanTextForDisplay(text) {
+    if (!text) return "";
+    return text.replace(/\s+/g, ' ').trim();
+}
+
+function processUserInput(input) {
+    const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
+    const hasNumber = /\d/.test(cleanedInputForMath);
+    const looksLikeMathOrUnitConversion = hasNumber && (
+        cleanedInputForMath.includes(' to ') ||
+        /[+\-*/^%]/.test(cleanedInputForMath) ||
+        cleanedInputForMath.includes('sqrt') || cleanedInputForMath.includes('log') ||
+        cleanedInputForMath.includes('sin') || cleanedInputForMath.includes('cos') || cleanedInputForMath.includes('tan')
+    );
+
+    if (looksLikeMathOrUnitConversion) {
+        try {
+            const result = math.evaluate(cleanedInputForMath);
+            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
+                const mathResultString = result.toString();
+                if (mathResultString && mathResultString !== cleanedInputForMath) {
+                    console.log("Math.js Result:", mathResultString);
+                    return mathResultString;
+                }
+            }
+        } catch (e) {
+            console.warn("Math.js hesaplaması başarısız oldu, Fuse denenecek:", e.message);
+        }
+    }
+
+    if (!fuse) {
+        console.error("Fuse.js arama motoru henüz hazır değil.");
+        return "Üzgünüm, arama motoru henüz hazır değil.";
+    }
+
+    const searchTerm = cleanSearchTerm(input);
+    if (searchTerm.length === 0) {
+        return "Üzgünüm, ne sorduğunu tam olarak anlayamadım.";
+    }
+
+    const results = fuse.search(searchTerm);
+    console.log(`Searching Fuse for: "${searchTerm}"`);
+    console.log("Fuse.js Results:", results);
+
+    if (results.length > 0) {
+        const bestMatch = results[0];
+        const matchedOriginalKey = bestMatch.item.originalKey;
+        let botResponse = botData[matchedOriginalKey];
+
+        if (!botResponse) {
+            console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
+            return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
+        }
+
+        if (botResponse.includes('{{currentTime}}')) {
+            botResponse = botResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+        }
+        if (botResponse.includes('{{currentDate}}')) {
+            botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+        }
+        return botResponse; // Botun cevabı olduğu gibi (varsa \n'ler ile) döner.
+    } else {
+        return "Üzgünüm, sorunuzu tam olarak anlayamadım.";
+    }
+}
+
+async function sendMessage() {
+    const messageText = userInput.value.trim(); // Kullanıcı girdisi baştan ve sondan trimlenir.
+
+    if (stagedFile && messageText.toLowerCase().includes('ocr')) {
+        // Kullanıcı "ocr" komutunu yazdığında, bu komut cleanTextForDisplay'den geçerek gösterilir.
+        addMessage(cleanTextForDisplay(messageText), 'user');
+        userInput.value = '';
+        userInput.focus();
+        await performOcr(stagedFile);
+        stagedFile = null;
+        return;
+    }
+
+    if (messageText !== '') {
+        // Kullanıcının yazdığı mesaj cleanTextForDisplay ile temizlenir.
+        addMessage(cleanTextForDisplay(messageText), 'user');
+        userInput.value = '';
+        userInput.focus();
+        if (stagedFile) {
+            addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+        }
+        setTimeout(() => {
+            const botResponse = processUserInput(messageText);
+            addMessage(botResponse, 'bot'); // Bot cevabı olduğu gibi.
+        }, 300 + Math.random() * 500);
+        return;
+    }
+
+    if (messageText === '' && stagedFile) {
+        addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+        userInput.focus();
+        return;
+    }
+}
+
+async function performOcr(imageFile) {
+    if (!ocrWorker) {
+        addMessage("OCR motoru henüz hazır değil! Lütfen biraz bekleyin.", "bot");
+        return;
+    }
+    if (!imageFile) {
+        addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
+        return;
+    }
+    // addMessage(`OCR işlemi başlıyor...`, "bot"); // İsteğe bağlı bilgilendirme
+    try {
+        const { data: { text } } = await ocrWorker.recognize(imageFile);
+        if (text && text.trim()) {
+            // OCR'DAN GELEN METİN DOĞRUDAN KULLANILIR, YENİ SATIRLAR KORUNUR.
+            addMessage(text, "bot");
+        } else {
+            addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
+        }
+    } catch (error) {
+        console.error("OCR sırasında hata oluştu:", error);
+        addMessage(`'${imageFile.name}' görseli işlenirken OCR hatası oluştu!`, "bot");
+    }
+}
+
+sendButton.addEventListener('click', sendMessage);
+
+userInput.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+});
+
+
+fileInput.addEventListener('change', (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+            stagedFile = file;
+            addMessage(`'${file.name}' eklendi.`, "bot");
+            userInput.focus();
+        } else {
+            addMessage("Şimdilik sadece görsel dosyaları seçebilirsin!", "bot");
+            stagedFile = null;
+        }
+        event.target.value = ''; // Input'u sıfırla ki aynı dosya tekrar seçilebilsin
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadBotData();
+    await initializeOcrWorker();
+    console.log("Tüm başlangıç işlemleri (veri ve OCR motoru) tamamlandı.");
 });
