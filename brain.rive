@@ -1,19 +1,27 @@
-! version = 2.0
+// --- Plaka Sorgusu ---
++ [*] osmaniye plaka[sı|sını| kodu| numarası] [*]
+- Osmaniye'nin plakası 80'dir.
 
-// Giriş mesajı
-+ merhaba
-- Merhaba! Size nasıl yardımcı olabilirim?
+// --- Su İyon Değeri Sorgusu ---
++ [*] su[yun|] ior [değeri|] [*]
+- Suyun iyon değeri genellikle minerallere bağlıdır. Net bir değer veremem.
 
-+ selam
-- Selam!
-- Merhabalar!
+// --- Saat Sorgusu ---
++ [*] (saat kaç|saati söyler misin|saat) [*]
+- Saat şu an: <call>currentTime</call>
 
-// Basit bir soru-cevap
-+ nasılsın
-- Teşekkür ederim, iyiyim. Siz nasılsınız?
+// --- OCR Tetikleyici ---
++ [*] ocr [*]
+- <call>triggerOcr</call>
 
-// Anlaşılamayan girdiler için varsayılan yanıt
+// --- Selamlaşma ---
++ [*] (naber|nasılsın|ne var ne yok|nasıl gidiyor) [*]
+- İyiyim, teşekkür ederim. Siz nasılsınız?
+- Bomba gibiyim! Ya sen?
+- Harika gidiyor, sormana sevindim!
+
+// --- Varsayılan Yanıt ---
 + *
 - Anlamadım. Tekrar söyler misiniz?
 - Ne demek istediğinizi anlayamadım.
-- Anlayamadım gerçekten seni
+- Başka bir şey sormak ister misiniz?
