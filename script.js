@@ -2,7 +2,7 @@ const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const fileInput = document.getElementById('fileInput');
-const fileInputLabel = document.querySelector('.file-input-label');
+const fileInputLabel = document.querySelector('.file-input-label'); // Bu satır HTML'de ilgili class varsa gereklidir.
 const chatContainer = document.getElementById('chatContainer');
 
 let botData = {};
@@ -29,42 +29,114 @@ async function initializeOcrWorker() {
 
 async function loadBotData() {
     try {
-        const response = await fetch('data.json');
+        const response = await fetch('data.json'); // data.json dosyanızın doğru yolda olduğundan emin olun
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         botData = await response.json();
         console.log("Bot verileri başarıyla yüklendi.");
 
-        const searchableItems = Object.keys(botData).map(originalKey => {
-            let cleanedKey = originalKey.toLowerCase().normalize("NFC");
-            cleanedKey = cleanedKey.replace(/'[^\\s]+/g, '');
-            cleanedKey = cleanedKey.replace(/[.,!?;:]/g, '');
-            cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim();
-            return {
-                cleanedKey: cleanedKey,
-                originalKey: originalKey
+        const searchableItems = [];
+
+        const generateVariants = (keyWithOptionalParts) => {
+            const generatedForKey = new Set();
+
+            const cleanForFuse = (variant) => {
+                if (typeof variant !== 'string') return "";
+                let cleaned = variant.toLowerCase().normalize("NFC");
+                cleaned = cleaned.replace(/'[^\\s]+/g, '');
+                cleaned = cleaned.replace(/[.,!?;:]/g, '');
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
+                return cleaned;
             };
+
+            const keyWords = keyWithOptionalParts.split(' ');
+            const variantWordLists = keyWords.map(wordPart => {
+                if (!wordPart.includes('!')) {
+                    return [wordPart];
+                }
+
+                const subParts = wordPart.split('!');
+                const wordVariants = [];
+                let currentWord = subParts[0];
+                wordVariants.push(currentWord);
+
+                for (let i = 1; i < subParts.length; i++) {
+                    currentWord += subParts[i];
+                    wordVariants.push(currentWord);
+                }
+                return wordVariants.length > 0 ? wordVariants : [""];
+            });
+
+            let phraseCombinations = [[]];
+            for (const wordList of variantWordLists) {
+                if (wordList.length === 0 || (wordList.length === 1 && wordList[0] === "")) continue;
+                const newCombinations = [];
+                for (const existingCombo of phraseCombinations) {
+                    for (const word of wordList) {
+                        newCombinations.push(existingCombo.concat(word));
+                    }
+                }
+                phraseCombinations = newCombinations;
+            }
+
+            phraseCombinations.forEach(comboArray => {
+                const phrase = comboArray.join(' ');
+                const cleanedPhrase = cleanForFuse(phrase);
+                if (cleanedPhrase) {
+                    generatedForKey.add(cleanedPhrase);
+                }
+            });
+
+            const fullyExpandedCleaned = cleanForFuse(keyWithOptionalParts.replace(/!/g, ''));
+            if (fullyExpandedCleaned) {
+                generatedForKey.add(fullyExpandedCleaned);
+            }
+
+            const shortestVersionParts = keyWithOptionalParts.split(' ').map(part => {
+                return part.includes('!') ? part.substring(0, part.indexOf('!')) : part;
+            });
+            const shortestCleaned = cleanForFuse(shortestVersionParts.join(' '));
+            if (shortestCleaned) {
+                generatedForKey.add(shortestCleaned);
+            }
+
+            return Array.from(generatedForKey);
+        };
+
+        Object.keys(botData).forEach(originalKey => {
+            const variants = generateVariants(originalKey);
+            variants.forEach(cleanedVariantKey => {
+                if (cleanedVariantKey) {
+                    searchableItems.push({
+                        cleanedKey: cleanedVariantKey,
+                        originalKey: originalKey
+                    });
+                }
+            });
         });
 
         const options = {
             includeScore: true,
             keys: ['cleanedKey'],
-            threshold: 0.4,
+            threshold: 0.3, // Eşleşme hassasiyeti (0.0 en katı, 1.0 en gevşek)
             ignoreLocation: true,
         };
         fuse = new Fuse(searchableItems, options);
-        console.log("Fuse.js arama motoru başlatıldı.");
+        console.log("Fuse.js arama motoru varyasyonlarla başlatıldı.");
+        // console.log("Fuse için aranabilir öğeler:", JSON.stringify(searchableItems, null, 2));
+
+
     } catch (error) {
-        console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
-        addMessage("json şeyoldu!", "bot");
+        console.error("Bot verileri veya Fuse.js (varyasyonlu) yüklenirken bir hata oluştu:", error);
+        addMessage("json veya varyasyonlu arama motoru yüklenirken bir sorun oluştu!", "bot");
     }
 }
 
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
-    messageDiv.style.whiteSpace = 'pre-line'; // Bu satır \n karakterlerini işler
+    messageDiv.style.whiteSpace = 'pre-line'; // Yeni satırları (\n) işlemesi için
     messageDiv.textContent = text;
     chatMessages.appendChild(messageDiv);
     setTimeout(() => {
@@ -79,18 +151,18 @@ function cleanSearchTerm(input) {
     let cleaned = input.toLowerCase().normalize("NFC");
     cleaned = cleaned.replace(/'[^\\s]+/g, '');
     cleaned = cleaned.replace(/[.,!?;:]/g, '');
+    // Kullanıcı girdisindeki ! işaretlerini de temizler, bu normaldir.
     cleaned = cleaned.replace(/[^a-z0-9ğüşöçİı\s+\-*/^.]/g, '');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
     cleaned = tokens.join(' ');
     if (cleaned.length === 0) {
-        return "";
+        return ""; // Boş bir arama terimi döndürmek yerine boş string
     }
     return cleaned;
 }
 
-// Bu fonksiyon sadece kullanıcı girdilerindeki gereksiz boşlukları temizlemek için kullanılacak.
-// Örneğin, "  merhaba   dünya  " girdisini "merhaba dünya" yapar.
+// Sadece kullanıcı mesajlarındaki gereksiz boşlukları temizler.
 function cleanTextForDisplay(text) {
     if (!text) return "";
     return text.replace(/\s+/g, ' ').trim();
@@ -112,7 +184,7 @@ function processUserInput(input) {
             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
                 const mathResultString = result.toString();
                 if (mathResultString && mathResultString !== cleanedInputForMath) {
-                    console.log("Math.js Result:", mathResultString);
+                    console.log("Math.js Sonucu:", mathResultString);
                     return mathResultString;
                 }
             }
@@ -127,13 +199,17 @@ function processUserInput(input) {
     }
 
     const searchTerm = cleanSearchTerm(input);
-    if (searchTerm.length === 0) {
-        return "Üzgünüm, ne sorduğunu tam olarak anlayamadım.";
+    if (searchTerm.length === 0 && !stagedFile) { // Eğer sadece boşluk girildiyse ve dosya yoksa
+        return "Lütfen bir şeyler yazın veya dosya ekleyip 'ocr' komutunu kullanın.";
+    }
+    if (searchTerm.length === 0 && stagedFile) { // Dosya var ama yazı yoksa, OCR için yönlendir
+        return "Görsel eklendi. Metnini almak için 'ocr' yazıp gönderebilirsin.";
     }
 
+
     const results = fuse.search(searchTerm);
-    console.log(`Searching Fuse for: "${searchTerm}"`);
-    console.log("Fuse.js Results:", results);
+    console.log(`Fuse araması yapılıyor: "${searchTerm}"`);
+    console.log("Fuse.js Sonuçları:", results);
 
     if (results.length > 0) {
         const bestMatch = results[0];
@@ -141,53 +217,59 @@ function processUserInput(input) {
         let botResponse = botData[matchedOriginalKey];
 
         if (!botResponse) {
-            console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
+            console.error(`KRİTİK HATA: Eşleşen orijinal anahtar "${matchedOriginalKey}" botData içinde bulunamadı.`);
             return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
         }
 
-        if (botResponse.includes('{{currentTime}}')) {
-            botResponse = botResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+        if (typeof botResponse === 'string') { // Sadece string ise replace yap
+            if (botResponse.includes('{{currentTime}}')) {
+                botResponse = botResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+            }
+            if (botResponse.includes('{{currentDate}}')) {
+                botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+            }
         }
-        if (botResponse.includes('{{currentDate}}')) {
-            botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
-        }
-        return botResponse; // Botun cevabı olduğu gibi (varsa \n'ler ile) döner.
+        return botResponse;
     } else {
-        return "Üzgünüm, sorunuzu tam olarak anlayamadım.";
+        return "Üzgünüm, sorunuzu tam olarak anlayamadım. Daha farklı bir şekilde sormayı deneyebilirsiniz.";
     }
 }
 
 async function sendMessage() {
-    const messageText = userInput.value.trim(); // Kullanıcı girdisi baştan ve sondan trimlenir.
+    const messageText = userInput.value.trim();
 
     if (stagedFile && messageText.toLowerCase().includes('ocr')) {
-        // Kullanıcı "ocr" komutunu yazdığında, bu komut cleanTextForDisplay'den geçerek gösterilir.
-        addMessage(cleanTextForDisplay(messageText), 'user');
+        addMessage(cleanTextForDisplay(messageText), 'user'); // Kullanıcının "ocr" komutunu temizleyip göster
         userInput.value = '';
         userInput.focus();
         await performOcr(stagedFile);
-        stagedFile = null;
+        stagedFile = null; // OCR sonrası dosyayı temizle
         return;
     }
 
     if (messageText !== '') {
-        // Kullanıcının yazdığı mesaj cleanTextForDisplay ile temizlenir.
-        addMessage(cleanTextForDisplay(messageText), 'user');
+        addMessage(cleanTextForDisplay(messageText), 'user'); // Kullanıcı mesajını temizleyip göster
         userInput.value = '';
         userInput.focus();
         if (stagedFile) {
-            addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+             // Dosya varsa ve OCR komutu değilse, dosyayı işleme almayabiliriz veya farklı bir mesaj verebiliriz.
+             // Şimdilik, dosyanın eklendiğini belirten bir mesaj göstermeyelim, çünkü OCR ile işlenmedi.
+             // İsterseniz buraya "Dosya eklendi ama 'ocr' komutu kullanılmadı." gibi bir mesaj ekleyebilirsiniz.
+             // Veya stagedFile = null; ile dosyayı iptal edebilirsiniz.
+             // Şimdilik, normal mesaj akışına devam edelim.
         }
         setTimeout(() => {
             const botResponse = processUserInput(messageText);
-            addMessage(botResponse, 'bot'); // Bot cevabı olduğu gibi.
+            addMessage(botResponse, 'bot');
         }, 300 + Math.random() * 500);
         return;
     }
 
+    // Sadece dosya eklendiğinde ve mesaj kutusu boşken gönder tuşuna basılırsa
     if (messageText === '' && stagedFile) {
-        addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+        addMessage("Görsel eklendi. Metnini almak için 'ocr' yazıp gönderebilirsin.", "user"); // Kullanıcıya bilgi
         userInput.focus();
+        // stagedFile burada null yapılmamalı, kullanıcı 'ocr' yazana kadar beklemeli
         return;
     }
 }
@@ -201,12 +283,11 @@ async function performOcr(imageFile) {
         addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
         return;
     }
-    // addMessage(`OCR işlemi başlıyor...`, "bot"); // İsteğe bağlı bilgilendirme
+    addMessage("Görsel işleniyor (OCR)...", "bot"); // Kullanıcıya OCR işleminin başladığını bildir
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
         if (text && text.trim()) {
-            // OCR'DAN GELEN METİN DOĞRUDAN KULLANILIR, YENİ SATIRLAR KORUNUR.
-            addMessage(text, "bot");
+            addMessage(text, "bot"); // OCR metnini olduğu gibi, yeni satırları koruyarak göster
         } else {
             addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
         }
@@ -220,30 +301,31 @@ sendButton.addEventListener('click', sendMessage);
 
 userInput.addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
-        event.preventDefault();
+        event.preventDefault(); // Enter'ın varsayılan davranışını (örn: form gönderme) engelle
         sendMessage();
     }
 });
-
 
 fileInput.addEventListener('change', (event) => {
     const files = event.target.files;
     if (files.length > 0) {
         const file = files[0];
         if (file.type.startsWith('image/')) {
-            stagedFile = file;
-            addMessage(`'${file.name}' eklendi.`, "bot");
+            stagedFile = file; // Dosyayı sonraki OCR komutu için sakla
+            addMessage(`'${file.name}' eklendi. Metnini almak için 'ocr' yazıp gönderin.`, "bot");
             userInput.focus();
         } else {
             addMessage("Şimdilik sadece görsel dosyaları seçebilirsin!", "bot");
             stagedFile = null;
         }
-        event.target.value = ''; // Input'u sıfırla ki aynı dosya tekrar seçilebilsin
+        event.target.value = ''; // Aynı dosyayı tekrar seçebilmek için input'u sıfırla
     }
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadBotData();
-    await initializeOcrWorker();
-    console.log("Tüm başlangıç işlemleri (veri ve OCR motoru) tamamlandı.");
+    await loadBotData(); // Önce bot verilerini ve Fuse'u yükle
+    await initializeOcrWorker(); // Sonra OCR motorunu başlat
+    console.log("Tüm başlangıç işlemleri (veri, Fuse ve OCR motoru) tamamlandı.");
+    // İlk mesaj index.html içinde zaten var. İsterseniz buradan da ekleyebilirsiniz:
+    // addMessage("Selam ben Ahraz. Matematik, tarih, saat, plaka, IOR numaraları gibi konulara hakimim. Görsel ekleyip sonrasında 'ocr' komutunu kullanarak metnini alabilirsin.", "bot");
 });

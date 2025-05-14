@@ -1,39 +1,32 @@
-// script.js
-
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
+const sendButton = document.getElementById('sendButton');
+const fileInput = document.getElementById('fileInput');
+const fileInputLabel = document.querySelector('.file-input-label');
 const chatContainer = document.getElementById('chatContainer');
-let botData = {}; // Yüklenen JSON verilerini depolamak için
-let fuse; // Fuse.js arama motoru değişkeni
 
-// Tesseract.js worker değişkeni
+let botData = {};
+let fuse;
 let ocrWorker;
+let stagedFile = null;
 
-// --- Stopword Listesi ---
-// Bu liste, metin işlenirken çıkarılacak yaygın kelimeleri içerir.
-// Fuse.js kendi algoritmalarını kullanabilir, ancak arama terimini temizlerken kullanışlı olabilir.
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba"
-    // Daha fazla stopword ekleyebilirsin
+    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "ahrazcım", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba", "ben"
 ]);
-// --- Stopword Listesi Sonu ---
 
-
-// Tesseract.js worker'ını başlatma fonksiyonu
 async function initializeOcrWorker() {
     console.log("OCR motoru başlatılıyor...");
     try {
         ocrWorker = await Tesseract.createWorker('tur+eng');
         await ocrWorker.loadLanguage('tur+eng');
         await ocrWorker.initialize('tur+eng');
-        console.log("OCR motoru hazır. Görsel sürükleyip bırakabilirsiniz.");
+        console.log("OCR motoru hazır. Ataç simgesiyle görsel ekleyebilirsiniz.");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
         addMessage("OCR motoru başlatılırken bir sorun oluştu.", "bot");
     }
 }
 
-// data.json dosyasını yükleme fonksiyonu
 async function loadBotData() {
     try {
         const response = await fetch('data.json');
@@ -41,293 +34,216 @@ async function loadBotData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         botData = await response.json();
-        console.log("Bot verileri başarıyla yüklendi."); // Konsol mesajı
+        console.log("Bot verileri başarıyla yüklendi.");
 
-        // --- Fuse.js'i Başlat ---
-        // Aranacak veriyi Fuse.js'in anlayacağı bir formatta hazırlayın.
-        // data.json'ın anahtarlarını arayacağız.
-        // Her anahtar için HEM TEMİZLENMİŞ HALİNİ (arama için) HEM DE ORİJİNAL HALİNİ (yanıt almak için) saklıyoruz.
-         const searchableItems = Object.keys(botData).map(originalKey => {
-             // Orijinal anahtarı al, temizleme adımlarını uygula:
-             let cleanedKey = originalKey.toLowerCase().normalize("NFC");
-             cleanedKey = cleanedKey.replace(/'[^\\s]+/g, ''); // Kesme işaretli ekleri kaldır
-             cleanedKey = cleanedKey.replace(/[.,!?;:]/g, ''); // Noktalamayı kaldır
-             cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim(); // Birden fazla boşluğu tek boşluğa indirge
+        const searchableItems = Object.keys(botData).map(originalKey => {
+            let cleanedKey = originalKey.toLowerCase().normalize("NFC");
+            cleanedKey = cleanedKey.replace(/'[^\\s]+/g, '');
+            cleanedKey = cleanedKey.replace(/[.,!?;:]/g, '');
+            cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim();
+            return {
+                cleanedKey: cleanedKey,
+                originalKey: originalKey
+            };
+        });
 
-             // data.json anahtarlarından stopwordleri ÇIKARMAYI seçiyoruz.
-             // Neden? Kullanıcı "Adana'nın plakası nedir" sorduğunda "adana plaka" temizlenir.
-             // Anahtar "adana plaka" ise Fuse doğrudan eşleştirir.
-             // Anahtar "adana plaka" iken ondan stopword "plaka"yı çıkarmak anlamsız olur.
-             // Stopword çıkarma sadece kullanıcı girdisinde yapılmalıdır.
-             // const tokens = cleanedKey.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
-             // cleanedKey = tokens.join(' ');
-
-
-             return {
-                 cleanedKey: cleanedKey, // Fuse bu alanda arama yapacak (sadece temel temizlik yapıldı)
-                 originalKey: originalKey // Biz bu anahtarı kullanarak botData'dan yanıtı alacağız
-             };
-         });
-
-        // Fuse.js seçenekleri - Eşleşme performansını ayarlamak için burası kritik!
         const options = {
-            includeScore: true, // Eşleşme puanını dahil et (debug için iyi)
-            keys: ['cleanedKey'], // Fuse'un arama yapacağı alanın adı
-            // --- BURASI ÇOK ÖNEMLİ: EŞİK DEĞERİNİ AYARLA! ---
-            // 0.0 = tam eşleşme, 1.0 = tamamen farklı.
-            // 0.2 - 0.4 arası başlangıç için denenebilir.
-            // Önceki kodda 0.3 yapmıştık, sorun yanıt almada olduğu için 0.3 kalsın.
-            threshold: 0.4, // **BU DEĞERİ TEST EDEREK OPTİMİZE ETMELİSİN!**
-            // location: 0, // Aranacak metnin başından uzaklık
-            // distance: 100, // Eşleşen karakterlerin maksimum mesafesi
-            ignoreLocation: true, // Konumu önemseme (kelime sırası önemli değilse) - Çoğu chatbot sorusu için iyi
-            // useExtendedSearch: true, // Gelişmiş arama modunu etkinleştir (istekliysen deneyebilirsin)
-            // includeMatches: true, // Eşleşen kısımları sonuçlara dahil et (debug için iyi)
-            // minMatchCharLength: 1, // Eşleşme için minimum karakter uzunluğu
-            // isCaseSensitive: false, // Küçük/büyük harf duyarlılığı (false varsayılan)
-            // shouldSort: true, // Sonuçları puana göre sırala (true varsayılan)
+            includeScore: true,
+            keys: ['cleanedKey'],
+            threshold: 0.4,
+            ignoreLocation: true,
         };
-
-        // Fuse.js'i oluştururken arama yapılacak diziyi (searchableItems) ve seçenekleri veriyoruz
         fuse = new Fuse(searchableItems, options);
-        console.log("Fuse.js arama motoru başlatıldı. Aranabilir temizlenmiş anahtarlar:", searchableItems.map(item => item.cleanedKey)); // Debug için temizlenmiş anahtarları da logla
-
+        console.log("Fuse.js arama motoru başlatıldı.");
     } catch (error) {
         console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
-        addMessage("Veriler yüklenirken bir sorun oluştu.", "bot");
+        addMessage("json şeyoldu!", "bot");
     }
 }
 
-// Sohbet arayüzüne mesaj ekleme fonksiyonu (Aynı)
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
+    messageDiv.style.whiteSpace = 'pre-line'; // Bu satır \n karakterlerini işler
     messageDiv.textContent = text;
     chatMessages.appendChild(messageDiv);
-    // Otomatik olarak en aşağıya kaydır
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    setTimeout(() => {
+        messageDiv.style.opacity = 1;
+        messageDiv.style.transform = 'translateY(0)';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 10);
 }
 
-// --- cleanSearchTerm: Kullanıcı girdisini Fuse.js araması için temizler ---
-// Bu fonksiyon, processUserInput içindeki temizleme mantığını buraya taşıyor.
-// Fuse.js'e verilmeden önce kullanıcı girdisine uygulanır.
 function cleanSearchTerm(input) {
     if (!input) return "";
-
-    let cleaned = input.toLowerCase().normalize("NFC"); // Küçük harf yap ve normalize et
-
-    // Kesme işareti ve sonrasındaki ekleri kaldır ('nın, 'si vb.)
-    // Regex: ' işaretini ve ardından gelen bir veya daha fazla boşluk olmayan karakteri yakalar
+    let cleaned = input.toLowerCase().normalize("NFC");
     cleaned = cleaned.replace(/'[^\\s]+/g, '');
-
-    // Yaygın noktalama işaretlerini kaldır
     cleaned = cleaned.replace(/[.,!?;:]/g, '');
-
-    // Birden fazla boşluğu tek boşluğa indirge ve baştan/sondan boşlukları sil
+    cleaned = cleaned.replace(/[^a-z0-9ğüşöçİı\s+\-*/^.]/g, '');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-     // --- Yeni: Stopwordleri çıkar ---
-     const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
-     cleaned = tokens.join(' ');
-     // --- Yeni Bitti ---
-
-
-    // Eğer temizlenmiş arama terimi boşsa anlamlı bir girdi yok demektir
+    const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
+    cleaned = tokens.join(' ');
     if (cleaned.length === 0) {
-         // Math.js de sonuç vermediyse buraya düşer.
-         // Fuse.js boş string ile arama yaparsa sonuç bulamaz, bu erken dönüş doğru.
-         return ""; // Boş string döndür ki processUserInput bunu algılayabilsin
+        return "";
     }
-
-
-    return cleaned; // Temizlenmiş arama terimini döndür
+    return cleaned;
 }
 
-
-// --- cleanTextForDisplay: Metni arayüzde göstermeden önce temizler ---
-// Bu fonksiyon sadece görüntüleme amaçlıdır.
+// Bu fonksiyon sadece kullanıcı girdilerindeki gereksiz boşlukları temizlemek için kullanılacak.
+// Örneğin, "  merhaba   dünya  " girdisini "merhaba dünya" yapar.
 function cleanTextForDisplay(text) {
     if (!text) return "";
-    // Sadece temel temizlik (küçük harf, çoklu boşlukları tek yapma)
-    return text.toLowerCase()
-               .normalize("NFC") // Türkçe karakterleri normalleştir
-               // Kesme işaretini kaldırmak veya noktalamayı kaldırmak istersen buraya ekleyebilirsin
-               .replace(/\s+/g, ' ') // Birden fazla boşluğu tek boşluğa indirge
-               .trim();
+    return text.replace(/\s+/g, ' ').trim();
 }
 
-
-// Kullanıcı girdisini işleme ve bot yanıtı oluşturma fonksiyonu
 function processUserInput(input) {
-    // --- Math.js kısmı (Aynı) ---
-    // Math için temizleme yaparken sadece virgülleri noktaya çevir
     const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
     const hasNumber = /\d/.test(cleanedInputForMath);
     const looksLikeMathOrUnitConversion = hasNumber && (
         cleanedInputForMath.includes(' to ') ||
-        /[+\-*/^()]/.test(cleanedInputForMath) ||
-        cleanedInputForMath.includes('sqrt') ||
-        cleanedInputForMath.includes('log') ||
-        cleanedInputForMath.includes('sin') ||
-        cleanedInputForMath.includes('cos') ||
-        cleanedInputForMath.includes('tan')
+        /[+\-*/^%]/.test(cleanedInputForMath) ||
+        cleanedInputForMath.includes('sqrt') || cleanedInputForMath.includes('log') ||
+        cleanedInputForMath.includes('sin') || cleanedInputForMath.includes('cos') || cleanedInputForMath.includes('tan')
     );
 
     if (looksLikeMathOrUnitConversion) {
         try {
             const result = math.evaluate(cleanedInputForMath);
-             if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
-                return result.toString();
-             } else {
-                console.warn("Math.js tanımsız bir sonuç döndürdü:", result);
-             }
+            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
+                const mathResultString = result.toString();
+                if (mathResultString && mathResultString !== cleanedInputForMath) {
+                    console.log("Math.js Result:", mathResultString);
+                    return mathResultString;
+                }
+            }
         } catch (e) {
-            console.warn("Math.js hesaplaması başarısız oldu:", e.message);
+            console.warn("Math.js hesaplaması başarısız oldu, Fuse denenecek:", e.message);
         }
     }
-    // --- Math.js kısmı sonu ---
 
-
-    // --- Fuse.js ile Arama ---
     if (!fuse) {
         console.error("Fuse.js arama motoru henüz hazır değil.");
         return "Üzgünüm, arama motoru henüz hazır değil.";
     }
 
-    // Kullanıcı girdisini arama için temizle
     const searchTerm = cleanSearchTerm(input);
-
-    // Eğer temizlenmiş arama terimi boşsa anlamlı bir girdi yok demektir
     if (searchTerm.length === 0) {
-         // Math.js de sonuç vermediyse ve arama terimi boşsa varsayılan yanıt
-         return "Üzgünüm, ne sorduğunu anlayamadım.";
+        return "Üzgünüm, ne sorduğunu tam olarak anlayamadım.";
     }
 
-    // Fuse.js ile arama yap
-    // cleanSearchTerm fonksiyonu boş string döndürmeyeceği için searchTerm.length > 0 kontrolü yeterli
     const results = fuse.search(searchTerm);
+    console.log(`Searching Fuse for: "${searchTerm}"`);
+    console.log("Fuse.js Results:", results);
 
-    console.log(`Searching for: "${searchTerm}"`); // Arama terimini konsola yazdır
-    console.log("Fuse.js Results:", results); // Debug için tüm sonuçları yazdır
-
-
-    // En iyi eşleşmeyi al (Fuse.js sonuçları puana göre sıralar, 0 en iyi puan)
     if (results.length > 0) {
         const bestMatch = results[0];
-        // Orijinal anahtarı alıyoruz (loadBotData'da searchableItems'e eklemiştik)
         const matchedOriginalKey = bestMatch.item.originalKey;
-        const score = bestMatch.score; // Eşleşme puanı (0 ile 1 arası, 0 en iyi)
-
-        // Fuse'un kendi eşiği (options.threshold) zaten sonuçları filtreler.
-        // Burada sadece bulunan en iyi sonucun puanını logluyoruz.
-        console.log(`Best Fuse Match Original Key: "${matchedOriginalKey}" | Score: ${score.toFixed(4)}`);
-
-        // Orijinal anahtarı kullanarak yanıtı data.json'dan al
         let botResponse = botData[matchedOriginalKey];
 
-        // Eğer eşleşme bulundu ama yanıt boşsa (bu hata normalde olmamalı)
         if (!botResponse) {
             console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
             return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
         }
 
-        // Yanıtın dinamik içeriğini (saat, tarih) güncelle
         if (botResponse.includes('{{currentTime}}')) {
             botResponse = botResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
         }
         if (botResponse.includes('{{currentDate}}')) {
             botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
         }
-
-        return botResponse; // En iyi eşleşmenin yanıtını döndür
-
+        return botResponse; // Botun cevabı olduğu gibi (varsa \n'ler ile) döner.
     } else {
-        // Fuse.js eşiği geçen bir sonuç bulamadı
-        return "Üzgünüm, sorunuzu tam olarak anlayamadım."; // Varsayılan yanıt
+        return "Üzgünüm, sorunuzu tam olarak anlayamadım.";
     }
 }
 
-
-// Mesaj gönderme fonksiyonu (Aynı)
 async function sendMessage() {
-    const messageText = userInput.value.trim();
-    if (messageText === '') {
-        return; // Boş mesaj gönderme
-    }
+    const messageText = userInput.value.trim(); // Kullanıcı girdisi baştan ve sondan trimlenir.
 
-    addMessage(messageText, 'user'); // Kullanıcının yazdığı orijinal metni göstermek
-    userInput.value = ''; // Giriş alanını temizle
-
-    // Bot yanıtını bir gecikmeyle işle ve ekle
-    setTimeout(() => {
-        const botResponse = processUserInput(messageText);
-        addMessage(botResponse, 'bot');
-    }, 300 + Math.random() * 500);
-}
-
-// OCR işlemini gerçekleştiren fonksiyon (Aynı)
-async function performOcr(imageFile) {
-    if (!ocrWorker) {
-        addMessage("OCR motoru henüz hazır değil!", "bot");
+    if (stagedFile && messageText.toLowerCase().includes('ocr')) {
+        // Kullanıcı "ocr" komutunu yazdığında, bu komut cleanTextForDisplay'den geçerek gösterilir.
+        addMessage(cleanTextForDisplay(messageText), 'user');
+        userInput.value = '';
+        userInput.focus();
+        await performOcr(stagedFile);
+        stagedFile = null;
         return;
     }
 
-    //addMessage("Görsel işleniyor...", "bot");
-
-    try {
-        const { data: { text } } = await ocrWorker.recognize(imageFile);
-
-        if (text && text.trim()) {
-            // OCR sonucunu temizleyip gösterebilirsin
-            addMessage(cleanTextForDisplay(text), "bot");
-        } else {
-            addMessage("Görselde metin bulamadım!", "bot");
+    if (messageText !== '') {
+        // Kullanıcının yazdığı mesaj cleanTextForDisplay ile temizlenir.
+        addMessage(cleanTextForDisplay(messageText), 'user');
+        userInput.value = '';
+        userInput.focus();
+        if (stagedFile) {
+            addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
         }
-    } catch (error) {
-        console.error("OCR sırasında hata oluştu:", error);
-        addMessage("OCR yapılırken bir sıkıntı oldu!", "bot");
+        setTimeout(() => {
+            const botResponse = processUserInput(messageText);
+            addMessage(botResponse, 'bot'); // Bot cevabı olduğu gibi.
+        }, 300 + Math.random() * 500);
+        return;
+    }
+
+    if (messageText === '' && stagedFile) {
+        addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+        userInput.focus();
+        return;
     }
 }
 
-// Sürükle-Bırak Olayları (Aynı)
-chatContainer.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    chatContainer.classList.add('dragover');
-});
-
-chatContainer.addEventListener('dragleave', () => {
-    chatContainer.classList.remove('dragover');
-});
-
-chatContainer.addEventListener('drop', (e) => {
-    e.preventDefault();
-    chatContainer.classList.remove('dragover');
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        const file = files[0];
-        if (file.type.startsWith('image/')) {
-            performOcr(file);
-        } else {
-            addMessage("Sadece görsel işleyebiliyorum!", "bot");
-        }
+async function performOcr(imageFile) {
+    if (!ocrWorker) {
+        addMessage("OCR motoru henüz hazır değil! Lütfen biraz bekleyin.", "bot");
+        return;
     }
-});
+    if (!imageFile) {
+        addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
+        return;
+    }
+    // addMessage(`OCR işlemi başlıyor...`, "bot"); // İsteğe bağlı bilgilendirme
+    try {
+        const { data: { text } } = await ocrWorker.recognize(imageFile);
+        if (text && text.trim()) {
+            // OCR'DAN GELEN METİN DOĞRUDAN KULLANILIR, YENİ SATIRLAR KORUNUR.
+            addMessage(text, "bot");
+        } else {
+            addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
+        }
+    } catch (error) {
+        console.error("OCR sırasında hata oluştu:", error);
+        addMessage(`'${imageFile.name}' görseli işlenirken OCR hatası oluştu!`, "bot");
+    }
+}
 
+sendButton.addEventListener('click', sendMessage);
 
-// Gönder butonuna tıklama olay dinleyicisi (Aynı)
-document.getElementById('sendButton').addEventListener('click', sendMessage);
-
-// Giriş alanında 'Enter' tuşuna basma olay dinleyicisi (Aynı)
 userInput.addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
+        event.preventDefault();
         sendMessage();
     }
 });
 
-// Sayfa yüklendiğinde bot verilerini, Fuse.js'i ve Tesseract'ı yükle (Aynı)
+
+fileInput.addEventListener('change', (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+            stagedFile = file;
+            addMessage(`'${file.name}' eklendi.`, "bot");
+            userInput.focus();
+        } else {
+            addMessage("Şimdilik sadece görsel dosyaları seçebilirsin!", "bot");
+            stagedFile = null;
+        }
+        event.target.value = ''; // Input'u sıfırla ki aynı dosya tekrar seçilebilsin
+    }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // loadBotData fonksiyonu artık Fuse.js'i de başlatıyor
     await loadBotData();
     await initializeOcrWorker();
+    console.log("Tüm başlangıç işlemleri (veri ve OCR motoru) tamamlandı.");
 });
