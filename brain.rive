@@ -1,48 +1,18 @@
 ! version = 2.0
 
-// --- Genel Sohbet ---
-+ [*] (selam|merhaba|merhabalar) [*]
+// Giriş mesajı
++ merhaba
 - Merhaba! Size nasıl yardımcı olabilirim?
-- Selam! Nasıl yardımcı olabilirim?
 
-+ [*] (naber|nasılsın|ne var ne yok|nasıl gidiyor) [*]
-- İyiyim, teşekkür ederim. Siz nasılsınız?
-- Bomba gibiyim! Ya sen?
++ selam
+- Selam!
+- Merhabalar!
 
-+ [*] (adın ne|ismin ne|senin adın|sana ne diyorlar) [*]
-- Bana Ahraz diyebilirsiniz.
-- Adım Ahraz.
-- Ben Ahraz.
+// Basit bir soru-cevap
++ nasilsin
+- Teşekkür ederim, iyiyim. Siz nasılsınız?
 
-+ [*] (teşekkür ederim|teşekkürler|sağ ol|sağ olasın) [*]
-- Rica ederim! Ne demek.
-- Yardımcı olabildiysem ne mutlu bana.
-
-+ [*] günaydın [*]
-- Günaydın!
-
-+ [*] iyi akşamlar [*]
-- Size de iyi akşamlar!
-
-+ [*] iyi günler [*]
-- İyi günler dilerim!
-
-+ [*] (kaç yaşındasın|yaşın kaç|yaşın) [*]
-- Sekiz yaşındayım
-
-+ [*] iyi geceler [*]
-- İyi geceler.
-
-+ [*] (görüşürüz|hoşçakal|güle güle|bay bay) [*]
-- Görüşmek üzere!
-- Hoşçakalın!
-
-+ [*] hayatın anlamı [*]
-- Hayatın anlamı 42 ...
-
-// --- Varsayılan Cevaplar ---
+// Anlaşılamayan girdiler için varsayılan yanıt
 + *
-- Üzgünüm, bunu tam olarak anlayamadım.
-- Hımm, bu konuda bir bilgim yok gibi.
-- Ne demek istediğinizi çözemedim maalesef.
-- Anlamadım.
+- Anlamadım. Tekrar söyler misiniz?
+- Ne demek istediğinizi anlayamadım.
