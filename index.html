@@ -3,19 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="ahraz">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <title>ahraz</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         /* --- CSS Variables for Dark Mode --- */
         :root {
-            /* Default (Light Mode - though we default to dark below) */
             --bg-color: #f4f4f4;
             --container-bg: #fff;
             --text-color: #333;
@@ -33,168 +29,84 @@
         }
 
         body.dark-mode {
-            --bg-color: #202123; /* Dark background */
-            --container-bg: #303134; /* Slightly lighter dark for container */
-            --text-color: #e0e0e0; /* Light text */
-            --user-msg-bg: #404144; /* Darker grey for user bubbles */
-            --bot-msg-bg: #404144; /* Same or similar for bot bubbles in this style */
-            --input-bg: #404144; /* Dark grey for input */
-            --input-border: #505154; /* Subtle border */
-            --button-bg: #505154; /* Dark grey for buttons */
-            --button-hover-bg: #606164; /* Slightly lighter hover */
-            --button-text: #e0e0e0; /* Light text for buttons */
-            --chat-border: #404144; /* Dark border */
-            --input-area-border: #404144; /* Dark border */
-            --scrollbar-thumb: #555; /* Dark scrollbar thumb */
-            --scrollbar-track: #303134; /* Dark scrollbar track */
+            --bg-color: #202123;
+            --container-bg: #303134;
+            --text-color: #e0e0e0;
+            --user-msg-bg: #404144;
+            --bot-msg-bg: #404144;
+            --input-bg: #404144;
+            --input-border: #505154;
+            --button-bg: #505154;
+            --button-hover-bg: #606164;
+            --button-text: #e0e0e0;
+            --chat-border: #404144;
+            --input-area-border: #404144;
+            --scrollbar-thumb: #555;
+            --scrollbar-track: #303134;
         }
-        /* --- End CSS Variables --- */
-
-
-        html {
-            height: 100%;
-        }
-
+        html { height: 100%; }
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color); /* Use variable */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            overflow: hidden; /* Prevent body scroll */
-            color: var(--text-color); /* Use variable */
+            font-family: Arial, sans-serif; margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            display: flex; justify-content: center; align-items: center;
+            height: 100%; overflow: hidden;
+            color: var(--text-color);
             overscroll-behavior-y: contain;
         }
-
-        body { /* Default to dark mode */
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
-
+        body { background-color: var(--bg-color); color: var(--text-color); }
         .chat-container {
-            width: 90%;
-            max-width: 700px;
+            width: 90%; max-width: 700px;
             background-color: var(--container-bg);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            height: 85vh;
-            max-height: 800px;
-            overflow: hidden;
+            border-radius: 10px; display: flex; flex-direction: column;
+            height: 85vh; max-height: 800px; overflow: hidden;
         }
-
         .chat-messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
+            flex-grow: 1; padding: 20px; overflow-y: auto;
             border-bottom: 1px solid var(--chat-border);
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
             scrollbar-width: thin;
             scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
-
         .chat-messages::-webkit-scrollbar { width: 8px; }
         .chat-messages::-webkit-scrollbar-track { background: var(--scrollbar-track); }
         .chat-messages::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
         .chat-messages::-webkit-scrollbar-thumb:hover { background: #555; }
-
         .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            line-height: 1.6;
-            max-width: 80%;
-            word-wrap: break-word;
-            opacity: 0;
-            transform: translateY(20px);
+            margin-bottom: 15px; padding: 10px 15px; border-radius: 18px;
+            line-height: 1.6; max-width: 80%; word-wrap: break-word;
+            opacity: 0; transform: translateY(20px);
             animation: fadeInMessage 0.3s ease forwards;
         }
-
-        @keyframes fadeInMessage {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes fadeInMessage { to { opacity: 1; transform: translateY(0); } }
         .user-message {
-            background-color: var(--user-msg-bg);
-            color: var(--text-color);
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
+            background-color: var(--user-msg-bg); color: var(--text-color);
+            align-self: flex-end; border-bottom-right-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
-
         .bot-message {
-            background-color: var(--bot-msg-bg);
-            color: var(--text-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
+            background-color: var(--bot-msg-bg); color: var(--text-color);
+            align-self: flex-start; border-bottom-left-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
-
         .chat-input {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
+            display: flex; align-items: center; padding: 15px 20px;
             border-top: 1px solid var(--input-area-border);
             background-color: var(--input-bg);
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
+            border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
         }
-
-        .file-input-wrapper {
-            position: relative;
-            margin-right: 10px;
-        }
-
-        .file-input-wrapper input[type="file"] { display: none; }
-
-        .file-input-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 10px;
-            color: var(--button-text);
-            font-size: 1.2em;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            background-color: transparent;
-            transition: color 0.2s ease-in-out;
-        }
-        .file-input-label:hover { color: var(--button-hover-bg); }
-
         .chat-input input[type="text"] {
-            flex-grow: 1;
-            padding: 12px 18px;
-            border: 1px solid var(--input-border);
-            border-radius: 24px;
-            outline: none;
-            font-size: 1rem;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            resize: none;
-            line-height: 1.5;
-            margin-right: 18px;
+            flex-grow: 1; padding: 12px 18px;
+            border: 1px solid var(--input-border); border-radius: 24px;
+            outline: none; font-size: 1rem;
+            background-color: var(--input-bg); color: var(--text-color);
+            resize: none; line-height: 1.5; margin-right: 18px;
         }
-
         .chat-input button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            background-color: transparent;
-            color: var(--button-text);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.2em;
-            width: 20px;
-            height: 20px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px; background-color: transparent; color: var(--button-text);
+            border: none; border-radius: 50%; cursor: pointer;
+            font-weight: bold; font-size: 1.2em;
+            width: 20px; height: 20px;
             transition: color 0.2s ease-in-out;
         }
         .chat-input button:hover { color: var(--button-hover-bg); }
@@ -208,28 +120,20 @@
             .chat-messages { border-top-left-radius: 0; border-top-right-radius: 0; padding: 15px; }
             .chat-input { padding: 10px 15px; }
             .chat-input input[type="text"] { padding: 10px 15px; }
-            .file-input-label, .chat-input button {
+            .chat-input button {
                 padding: 8px; font-size: 1em; width: 20px; height: 20px;
             }
         }
     </style>
 
-    <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
     <script src="https://unpkg.com/mathjs@14.4.0/lib/browser/math.js"></script>
     <script src="https://unpkg.com/rivescript@latest/dist/rivescript.min.js"></script>
 </head>
 <body class="dark-mode">
     <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, IOR numaraları gibi konulara hakimim. Görsel ekleyip sonrasında 'ocr' komutunu kullanarak metnini alabilirsin.</div>
-        </div>
-        <div class="chat-input">
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" accept="image/*">
-                <label for="fileInput" class="file-input-label" title="Dosya Ekle">
-                    <i class="fas fa-paperclip"></i>
-                </label>
             </div>
+        <div class="chat-input">
             <input type="text" id="userInput" placeholder="hıms" autofocus>
             <button id="sendButton" title="Gönder">
                 <span>send</span>
