@@ -1,33 +1,10 @@
-// script.js
+// script.js (Güncellenmiş)
 
-// clean.js dosyasındaki cleanAndTokenize fonksiyonu, bu script
-// HTML'de clean.js'den SONRA yüklendiği için global olarak erişilebilir olacak.
-// import { cleanAndTokenize } from './clean.js'; // Artık import yok
+// ... (clean.js ve stemmer.js import satırları - şimdilik hala yoruma alınmış)
 
-// --- HTML Elementlerine Referanslar ---
-// Sizin HTML'inizdeki ID'lere göre güncellendi.
-const inputElement = document.getElementById('userInput');
-const outputElement = document.getElementById('chatMessages');
-const sendButton = document.getElementById('sendButton');
+// ... (HTML Element Referansları)
 
-// --- Olay Dinleyicileri (Event Listeners) ---
-if (sendButton) {
-    sendButton.addEventListener('click', handleUserInput);
-} else {
-    console.error("Hata: 'sendButton' id'li element bulunamadı!");
-}
-
-if (inputElement) {
-    inputElement.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            handleUserInput();
-        }
-    });
-     inputElement.focus(); // Başlangıçta input'a odaklan
-} else {
-    console.error("Hata: 'userInput' id'li element bulunamadı!");
-}
+// ... (Olay Dinleyicileri)
 
 // --- Kullanıcı Girdisini İşleyen Fonksiyon ---
 function handleUserInput() {
@@ -39,10 +16,20 @@ function handleUserInput() {
     // Kullanıcının mesajını ekrana ekle
     displayMessage(rawInput, 'user-message');
 
-    // Botun işlemeye başlamasını tetikle (Şimdilik sadece temizleme)
+    // Botun işlemeye başlamasını tetikle
     processUserInput(rawInput)
-        .then(botResponse => {
-             // Bottan gelen cevabı (temizlenmiş tokenlar) ekrana ekle
+        .then(processedResult => { // Artık token dizisi veya başka bir sonuç gelecek
+             // Bottan gelen sonucu ekrana ekle
+             // Sonucu ekrana basmadan önce formatlayalım (örneğin bir stringe çevirelim)
+             let botResponse;
+             if (Array.isArray(processedResult)) {
+                 // Eğer işlem token dizisi döndürdüyse
+                 botResponse = `_İşlem sonucu:_ ${processedResult.join(', ')}`;
+             } else {
+                 // Eğer başka bir string döndürdüyse (ilerideki cevaplar gibi)
+                 botResponse = processedResult;
+             }
+
              displayMessage(botResponse, 'bot-message');
         })
         .catch(error => {
@@ -50,8 +37,8 @@ function handleUserInput() {
             displayMessage("Üzgünüm, bir hata oluştu.", 'bot-message');
         });
 
-    // Input alanını temizle
     inputElement.value = '';
+    inputElement.focus();
 }
 
 // --- Botun Ana İşleme Hattı Fonksiyonu (Şimdilik Sadece Temizleme) ---
@@ -64,30 +51,12 @@ async function processUserInput(rawInput) {
 
     console.log("Temizlenmiş Tokenlar:", tokens);
 
-    // --- Cevap Üretme (Temizlenmiş Tokenları Göster) ---
-    // Bot şu aşamada sadece temizleme yapıyor ve sonucunu gösteriyor.
-    if (tokens.length > 0) {
-         return `_Temizlenmiş kelimeler:_ ${tokens.join(', ')}`;
-    } else {
-         return "_Bot: Lütfen geçerli bir şeyler yazın._";
-    }
+    // --- Sonucu Döndür (Sadece Temizlenmiş Token Dizisi) ---
+    // Bot bu aşamada sadece temizleme yapıyor.
+    // Sadece token dizisini döndürüyoruz, formatlama displayMessage'dan önce handleUserInput'ta yapılıyor.
+    return tokens; // Sadece token dizisini döndür
 
-    // Sonraki adımlar (stemming, entity recognition, vb.) buraya eklenecek.
+    // Sonraki adımlar buraya eklenecek.
 }
 
-// --- Yardımcı Fonksiyon: Mesajı Ekrana Ekle ---
-// Sizin HTML'inizdeki yapı ve sınıflara göre güncellendi.
-function displayMessage(message, className) {
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', className);
-    messageElement.textContent = message;
-
-    setTimeout(() => {
-         outputElement.appendChild(messageElement);
-         outputElement.scrollTop = outputElement.scrollHeight;
-    }, 50); // Küçük gecikme animasyon için
-
-}
-
-// Bot başladığında ilk mesajı göster (Sizin HTML'inizdeki hazır mesajı kullanıyoruz)
-// displayMessage("Selam ben Ahraz. ...", 'bot-message'); // Bu satır yoruma alındı, HTML'deki görünecek
+// ... (displayMessage ve ilk bot mesajı fonksiyonları)
