@@ -95,6 +95,8 @@
     "saat": "{{currentTime}}",
     "tarih": "{{currentDate}}",
 
+    "hayatın anlamı": "Hayatın anlamı 42'dir.",
+
     "selam": "Selam! Size nasıl yardımcı olabilirim?",
     "merhaba": "Merhaba! Size nasıl yardımcı olabilirim?",
     "naber nasılsın": "İyiyim teşekkür ederim.",
