@@ -1,0 +1,104 @@
+! version = 2.0
+
+! sub currentTime = javascript
+! sub currentDate = javascript
+! sub triggerOcr = javascript
+
+// --- Plaka Kodları ---
+// Kullanıcılar "kilis plaka", "kilis'in plakası", "kilis plakası kaç" gibi şeyler yazabilir.
++ [*] kilis plaka[sı|sını| kodu| numarası] [*]
+- Kilis'in plaka kodu 79'dur.
+
++ [*] osmaniye plaka[sı|sını| kodu| numarası] [*]
+- Osmaniye'nin plaka kodu 80'dir.
+
++ [*] düzce plaka[sı|sını| kodu| numarası] [*]
+- Düzce'nin plaka kodu 81'dir.
+
+// --- IOR Değerleri ---
++ [*] su[yun|] ior [değeri|] [*]
+- Su ior değeri 1.325'tir.
+
++ [*] elmas[ın|] ior [değeri|] [*]
+- Elmasın ior değeri 2.418'dir.
+
++ [*] buz[un|] ior [değeri|] [*]
+- Buzun ior değeri 1.309'dur.
+
++ [*] cam[ın|] ior [değeri|] [*]
+- Camın ior değeri 1.500'dür.
+
++ [*] yağ[ın|] ior [değeri|] [*]
+- Yağın ior değeri 1.470'dir.
+
++ [*] bira[nın|] ior [değeri|] [*]
+- Biranın ior değeri 1.345'tir.
+
++ [*] bal[ın|] ior [değeri|] [*]
+- Balın ior değeri 1.484'tür.
+
+// --- Başkentler ---
++ [*] ingiltere[nin|] başkenti [*]
+- İngiltere'nin başkenti Londra'dır.
+
++ [*] türkiye[nin|] başkenti [*]
+- Türkiye'nin başkenti Ankara'dır.
+
+// --- Dinamik İçerik ---
++ [*] (saat kaç|saati söyler misin|saat) [*]
+- Saat şu an: <call>currentTime</call>
+
++ [*] (tarih ne|bugünün tarihi|bugün ayın kaçı|tarih) [*]
+- Bugün: <call>currentDate</call>
+
+// --- OCR ---
++ [*] ocr [*]
+- <call>triggerOcr</call>
+
+// --- Genel Sohbet ---
++ [*] (selam|merhaba|merhabalar) [*]
+- Merhaba! Size nasıl yardımcı olabilirim?
+- Selam! Nasıl yardımcı olabilirim?
+
++ [*] (naber|nasılsın|ne var ne yok|nasıl gidiyor) [*]
+- İyiyim, teşekkür ederim. Siz nasılsınız?
+- Bomba gibiyim! Ya sen?
+
++ [*] (adın ne|ismin ne|senin adın|sana ne diyorlar) [*]
+- Bana Ahraz diyebilirsiniz.
+- Adım Ahraz.
+- Ben Ahraz.
+
++ [*] (teşekkür ederim|teşekkürler|sağ ol|sağ olasın) [*]
+- Rica ederim! Ne demek.
+- Yardımcı olabildiysem ne mutlu bana.
+
++ [*] günaydın [*]
+- Günaydın! 
+
++ [*] iyi akşamlar [*]
+- Size de iyi akşamlar!
+
++ [*] iyi günler [*]
+- İyi günler dilerim!
+
++ [*] (kaç yaşındasın|yaşın kaç|yaşın) [*]
+- Sekiz yaşındayım
+
++ [*] iyi geceler [*]
+- İyi geceler.
+
++ [*] (görüşürüz|hoşçakal|güle güle|bay bay) [*]
+- Görüşmek üzere!
+- Hoşçakalın!
+
++ [*] hayatın anlamı [*]
+- Hayatın anlamı 42 ...
+
+// --- Varsayılan Cevaplar ---
+// Kullanıcının girdisi hiçbir üstteki kurala uymadığında bunlar tetiklenir.
++ *
+- Üzgünüm, bunu tam olarak anlayamadım.
+- Hımm, bu konuda bir bilgim yok gibi.
+- Ne demek istediğinizi çözemedim maalesef.
+- Anlamadım.

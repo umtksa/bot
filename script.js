@@ -2,24 +2,15 @@ const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const fileInput = document.getElementById('fileInput');
-const fileInputLabel = document.querySelector('.file-input-label');
-const chatContainer = document.getElementById('chatContainer');
 
-let botData = {};
-let fuse;
 let ocrWorker;
 let stagedFile = null;
-
-const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "ahrazcım", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba", "ben"
-]);
+let bot; // RiveScript bot instance
 
 async function initializeOcrWorker() {
     console.log("OCR motoru başlatılıyor...");
     try {
         ocrWorker = await Tesseract.createWorker('tur+eng');
-        await ocrWorker.loadLanguage('tur+eng');
-        await ocrWorker.initialize('tur+eng');
         console.log("OCR motoru hazır. Ataç simgesiyle görsel ekleyebilirsiniz.");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
@@ -27,44 +18,48 @@ async function initializeOcrWorker() {
     }
 }
 
-async function loadBotData() {
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+async function initializeRiveScript() {
+    bot = new RiveScript({ utf8: true });
+
+    bot.setSubroutine('currentTime', function(rs, args) {
+        return new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    });
+
+    bot.setSubroutine('currentDate', function(rs, args) {
+        return new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    });
+
+    bot.setSubroutine('triggerOcr', async function(rs, args) {
+        if (stagedFile && ocrWorker) {
+            const fileToProcess = stagedFile;
+            stagedFile = null;
+            // Kullanıcıya OCR'ın başladığını bildiren mesajı doğrudan RiveScript triggerOcr'dan vermek yerine,
+            // performOcr içinde zaten var. Belki burada kısa bir "işleniyor" mesajı olabilir.
+            // addMessage(`'${fileToProcess.name}' için OCR işlemi başlıyor...`, "bot"); // Bu satır performOcr içinde zaten var
+            await performOcr(fileToProcess);
+            return ""; // RiveScript'e boş cevap, mesajlar performOcr'da
+        } else if (!ocrWorker) {
+            return "OCR motoru henüz hazır değil.";
+        } else {
+            return "Lütfen önce bir görsel ekleyin ve sonra 'ocr' yazın.";
         }
-        botData = await response.json();
-        console.log("Bot verileri başarıyla yüklendi.");
+    });
 
-        const searchableItems = Object.keys(botData).map(originalKey => {
-            let cleanedKey = originalKey.toLowerCase().normalize("NFC");
-            cleanedKey = cleanedKey.replace(/'[^\\s]+/g, '');
-            cleanedKey = cleanedKey.replace(/[.,!?;:]/g, '');
-            cleanedKey = cleanedKey.replace(/\s+/g, ' ').trim();
-            return {
-                cleanedKey: cleanedKey,
-                originalKey: originalKey
-            };
-        });
-
-        const options = {
-            includeScore: true,
-            keys: ['cleanedKey'],
-            threshold: 0.5,
-            ignoreLocation: true,
-        };
-        fuse = new Fuse(searchableItems, options);
-        console.log("Fuse.js arama motoru başlatıldı.");
+    try {
+        await bot.loadFile('brain.rive');
+        bot.sortReplies();
+        console.log("RiveScript beyni başarıyla yüklendi ve sıralandı.");
     } catch (error) {
-        console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
-        addMessage("json şeyoldu!", "bot");
+        console.error("RiveScript beyni yüklenirken hata:", error);
+        addMessage("Botun beyni yüklenirken bir sorun oluştu.", "bot");
     }
 }
 
 function addMessage(text, sender) {
+    if (!text || text.trim() === "") return; // Boş mesajları ekleme
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
-    messageDiv.style.whiteSpace = 'pre-line'; // Bu satır \n karakterlerini işler
+    messageDiv.style.whiteSpace = 'pre-line';
     messageDiv.textContent = text;
     chatMessages.appendChild(messageDiv);
     setTimeout(() => {
@@ -74,30 +69,19 @@ function addMessage(text, sender) {
     }, 10);
 }
 
-function cleanSearchTerm(input) {
-    if (!input) return "";
-    let cleaned = input.toLowerCase().normalize("NFC");
-    cleaned = cleaned.replace(/'[^\\s]+/g, '');
-    cleaned = cleaned.replace(/[.,!?;:]/g, '');
-    cleaned = cleaned.replace(/[^a-z0-9ğüşöçİı\s+\-*/^.]/g, '');
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    const tokens = cleaned.split(' ').filter(word => word.length > 0 && !turkishStopwords.has(word));
-    cleaned = tokens.join(' ');
-    if (cleaned.length === 0) {
-        return "";
-    }
-    return cleaned;
-}
+// cleanSearchTerm fonksiyonu kaldırıldı.
 
-// Bu fonksiyon sadece kullanıcı girdilerindeki gereksiz boşlukları temizlemek için kullanılacak.
-// Örneğin, "  merhaba   dünya  " girdisini "merhaba dünya" yapar.
-function cleanTextForDisplay(text) {
+function cleanTextForDisplay(text) { // Bu fonksiyon sadece gösterim için, kalabilir.
     if (!text) return "";
     return text.replace(/\s+/g, ' ').trim();
 }
 
-function processUserInput(input) {
-    const cleanedInputForMath = input.toLowerCase().normalize("NFC").replace(/,/g, '.');
+async function processUserInput(input) {
+    const originalInput = input;
+
+    // 1. Math.js Kontrolü (RiveScript'ten önce)
+    // Kullanıcı girdisini matematik işlemi için normalize et (virgülü noktaya çevir)
+    const cleanedInputForMath = originalInput.toLowerCase().normalize("NFC").replace(/,/g, '.');
     const hasNumber = /\d/.test(cleanedInputForMath);
     const looksLikeMathOrUnitConversion = hasNumber && (
         cleanedInputForMath.includes(' to ') ||
@@ -108,87 +92,58 @@ function processUserInput(input) {
 
     if (looksLikeMathOrUnitConversion) {
         try {
-            const result = math.evaluate(cleanedInputForMath);
-            if (typeof result === 'number' || result instanceof math.Unit || result instanceof math.Complex || result instanceof math.BigNumber || (result !== null && typeof result === 'object' && typeof result.toString === 'function')) {
-                const mathResultString = result.toString();
-                if (mathResultString && mathResultString !== cleanedInputForMath) {
-                    console.log("Math.js Result:", mathResultString);
+            const mathResult = math.evaluate(cleanedInputForMath);
+            if (typeof mathResult === 'number' || mathResult instanceof math.Unit || mathResult instanceof math.Complex || mathResult instanceof math.BigNumber || (mathResult !== null && typeof mathResult === 'object' && typeof mathResult.toString === 'function')) {
+                const mathResultString = mathResult.toString();
+                if (mathResultString && mathResultString.toLowerCase() !== cleanedInputForMath.trim()) {
+                    console.log("Math.js Sonucu:", mathResultString);
                     return mathResultString;
                 }
             }
         } catch (e) {
-            console.warn("Math.js hesaplaması başarısız oldu, Fuse denenecek:", e.message);
+            console.warn("Math.js hesaplaması başarısız oldu, RiveScript denenecek:", e.message);
         }
     }
 
-    if (!fuse) {
-        console.error("Fuse.js arama motoru henüz hazır değil.");
-        return "Üzgünüm, arama motoru henüz hazır değil.";
+    // 2. RiveScript ile Cevap Alma
+    if (!bot || !bot.ready) {
+        console.error("RiveScript motoru henüz hazır değil.");
+        return "Üzgünüm, bot henüz tam olarak hazır değil. Lütfen biraz bekleyin.";
     }
 
-    const searchTerm = cleanSearchTerm(input);
-    if (searchTerm.length === 0) {
-        return "Üzgünüm, ne sorduğunu tam olarak anlayamadım.";
+    // Kullanıcı girdisini RiveScript için hazırla: küçük harf ve trim.
+    const preparedInput = originalInput.toLowerCase().trim();
+
+    if (preparedInput.length === 0) {
+        return "Ne demek istediğini anlayamadım."; // Boş girdi
     }
 
-    const results = fuse.search(searchTerm);
-    console.log(`Searching Fuse for: "${searchTerm}"`);
-    console.log("Fuse.js Results:", results);
+    console.log(`RiveScript'e gönderilen girdi: "${preparedInput}"`);
+    const reply = await bot.reply("local-user", preparedInput);
+    console.log("RiveScript Yanıtı:", reply);
 
-    if (results.length > 0) {
-        const bestMatch = results[0];
-        const matchedOriginalKey = bestMatch.item.originalKey;
-        let botResponse = botData[matchedOriginalKey];
-
-        if (!botResponse) {
-            console.error(`FATAL ERROR: Matched original key "${matchedOriginalKey}" not found in botData.`);
-            return "Üzgünüm, dahili bir hata oluştu (yanıt eşleşmedi).";
-        }
-
-        if (botResponse.includes('{{currentTime}}')) {
-            botResponse = botResponse.replace('{{currentTime}}', new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
-        }
-        if (botResponse.includes('{{currentDate}}')) {
-            botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
-        }
-        return botResponse; // Botun cevabı olduğu gibi (varsa \n'ler ile) döner.
-    } else {
-        return "Üzgünüm, sorunuzu tam olarak anlayamadım.";
-    }
+    return reply;
 }
 
 async function sendMessage() {
-    const messageText = userInput.value.trim(); // Kullanıcı girdisi baştan ve sondan trimlenir.
-
-    if (stagedFile && messageText.toLowerCase().includes('ocr')) {
-        // Kullanıcı "ocr" komutunu yazdığında, bu komut cleanTextForDisplay'den geçerek gösterilir.
-        addMessage(cleanTextForDisplay(messageText), 'user');
-        userInput.value = '';
-        userInput.focus();
-        await performOcr(stagedFile);
-        stagedFile = null;
-        return;
-    }
+    const messageText = userInput.value.trim();
 
     if (messageText !== '') {
-        // Kullanıcının yazdığı mesaj cleanTextForDisplay ile temizlenir.
-        addMessage(cleanTextForDisplay(messageText), 'user');
+        addMessage(cleanTextForDisplay(messageText), 'user'); // Kullanıcının yazdığını temiz göster
         userInput.value = '';
         userInput.focus();
-        if (stagedFile) {
-            addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
-        }
-        setTimeout(() => {
-            const botResponse = processUserInput(messageText);
-            addMessage(botResponse, 'bot'); // Bot cevabı olduğu gibi.
-        }, 300 + Math.random() * 500);
-        return;
-    }
 
-    if (messageText === '' && stagedFile) {
-        addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
+        if (stagedFile && !messageText.toLowerCase().includes("ocr")) {
+             addMessage(`'${stagedFile.name}' eklendi. Metnini almak için 'ocr' yazabilirsiniz.`, "bot");
+        }
+
+        const botResponse = await processUserInput(messageText);
+        if (botResponse) {
+            addMessage(botResponse, 'bot');
+        }
+    } else if (stagedFile) {
+        addMessage(`'${stagedFile.name}' eklendi. Metnini çıkarmak için 'ocr' yazabilirsiniz.`, "bot");
         userInput.focus();
-        return;
     }
 }
 
@@ -198,14 +153,12 @@ async function performOcr(imageFile) {
         return;
     }
     if (!imageFile) {
-        addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
-        return;
+        return; // Zaten triggerOcr'da kontrol ediliyor.
     }
-    // addMessage(`OCR işlemi başlıyor...`, "bot"); // İsteğe bağlı bilgilendirme
+    addMessage(`'${imageFile.name}' için OCR işlemi başlıyor...`, "bot");
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
         if (text && text.trim()) {
-            // OCR'DAN GELEN METİN DOĞRUDAN KULLANILIR, YENİ SATIRLAR KORUNUR.
             addMessage(text, "bot");
         } else {
             addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
@@ -225,25 +178,25 @@ userInput.addEventListener('keypress', function(event) {
     }
 });
 
-
 fileInput.addEventListener('change', (event) => {
     const files = event.target.files;
     if (files.length > 0) {
         const file = files[0];
         if (file.type.startsWith('image/')) {
             stagedFile = file;
-            addMessage(`'${file.name}' eklendi.`, "bot");
+            addMessage(`'${file.name}' seçildi. İçeriğini almak için 'ocr' yazabilirsiniz.`, "bot");
             userInput.focus();
         } else {
             addMessage("Şimdilik sadece görsel dosyaları seçebilirsin!", "bot");
             stagedFile = null;
         }
-        event.target.value = ''; // Input'u sıfırla ki aynı dosya tekrar seçilebilsin
+        event.target.value = '';
     }
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadBotData();
+    await initializeRiveScript();
     await initializeOcrWorker();
-    console.log("Tüm başlangıç işlemleri (veri ve OCR motoru) tamamlandı.");
+    console.log("Tüm başlangıç işlemleri (RiveScript beyni ve OCR motoru) tamamlandı.");
+    addMessage("Bot hazır! Konuşmaya başlayabilirsin.", "bot");
 });
