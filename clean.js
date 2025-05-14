@@ -1,42 +1,46 @@
-// clean.js
+// clean.js (Stop Word Silme Eklendi)
 
-/**
- * Metni temizler, küçük harfe çevirir, tırnaklı ekleri ve diğer yaygın noktalama işaretlerini kaldırır,
- * ve kelimelere ayırır.
- *
- * @param {string} text - İşlenecek ham metin.
- * @returns {string[]} - Temizlenmiş ve kelimelere ayrılmış kelimeler dizisi (tokens).
- */
-function cleanAndTokenize(text) { // 'export' kelimesi kaldırıldı
+// Yaygın Türkçe Stop Word'ler listesi (Set olarak tanımlandı, araması daha hızlı)
+// Bu listeyi ihtiyaçlarınıza göre genişletebilirsiniz.
+const stopWords = new Set([
+    "ama", "ile", "ve", "da", "de", "bana", "acaba"
+]);
+
+
+function cleanAndTokenize(text) {
     if (!text) {
-        return []; // Boş veya null girdi için boş dizi döndür
+        return [];
     }
 
-    // 1. Küçük harfe çevir
-    let cleanedText = text.toLowerCase();
+    const rawTokens = text.split(/\s+/);
+    const cleanedTokens = [];
 
-    // 2. Özel isimlere eklenen tırnaklı ekleri kaldır (örn: Ankara'nın -> Ankara)
-    // Regex: ' karakterini ve ardından gelen boşluk olmayan (herhangi bir) karakter grubunu bul.
-    // Bu desenleri boş string ile değiştiriyoruz. Bu, kelimeye bitişik tırnak ve eki kaldırır.
-    // Global flag (g) ile metindeki tüm eşleşmeleri değiştir.
-    cleanedText = cleanedText.replace(/'[^\\s]*/g, '');
+    for (const rawToken of rawTokens) {
+        if (!rawToken) {
+            continue;
+        }
 
-    // 3. Diğer yaygın noktalama işaretlerini kaldır
-    // Noktalama işaretlerini bir karakter sınıfı içinde listeledik.
-    // Global flag (g) ile metindeki tüm eşleşmeleri değiştir.
-    cleanedText = cleanedText.replace(/[.,!?;:"()\[\]{}]/g, '');
+        let processedToken = rawToken;
 
-    // 4. Birden fazla ardışık boşluğu tek boşluğa indirge ve baştaki/sondaki boşlukları sil
-    // Regex: Bir veya daha fazla boşluk karakterini bul. Global flag (g) ile tümünü değiştir.
-    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+        const apostropheIndex = processedToken.indexOf("'");
+        if (apostropheIndex !== -1) {
+            processedToken = processedToken.substring(0, apostropheIndex);
+        }
 
-    // 5. Metni boşluklara göre kelimelere (tokens) ayır
-    // trim() sonrası split('') boş stringe sahip tek elemanlı dizi dönebilir, bu yüzden filter lazım.
-    const tokens = cleanedText.split(' ');
+        processedToken = processedToken.replace(/[.,!?;:"()\[\]{}]/g, '');
+        processedToken = processedToken.toLowerCase();
 
-    // 6. Bölme işleminden sonra oluşmuş olabilecek boş string token'ları filtrele
-    return tokens.filter(token => token.length > 0);
+        // İşlem sonrası kelime boş kalmış mı kontrol et
+        if (processedToken.length > 0) {
+            // --- Stop Word Kontrolü ---
+            // Eğer kelime stopWords listesinde DEĞİLSE, nihai listeye ekle
+            if (!stopWords.has(processedToken)) {
+                 cleanedTokens.push(processedToken);
+            } else {
+                 // console.log(`Stop word silindi: '${processedToken}'`); // Debug için eklenebilir
+            }
+        }
+    }
+
+    return cleanedTokens; // Temizlenmiş ve stop word'leri silinmiş kelimeler dizisi
 }
-
-// clean.js dosyasındaki cleanAndTokenize fonksiyonu, script.js'de
-// bu dosya HTML'de ondan önce yüklendiğinde global olarak erişilebilir olacak.

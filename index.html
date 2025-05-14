@@ -11,12 +11,11 @@
     <style>
         /* --- CSS Variables for Dark Mode --- */
         :root {
-            /* Default (Light Mode - though we default to dark below) */
             --bg-color: #f4f4f4;
             --container-bg: #fff;
             --text-color: #333;
             --user-msg-bg: #f1f0f0;
-            --bot-msg-bg: #dcf8c6; /* Bu renge ihtiyaç kalmayabilir, bot mesajı da tek renk olabilir dark mode'da */
+            --bot-msg-bg: #dcf8c6;
             --input-bg: #f9f9f9;
             --input-border: #ccc;
             --button-bg: #9a9a9a;
@@ -28,20 +27,20 @@
             --scrollbar-track: #f1f1f1;
         }
         body.dark-mode {
-            --bg-color: #202123; /* Dark background */
-            --container-bg: #303134; /* Slightly lighter dark for container */
-            --text-color: #e0e0e0; /* Light text */
-            --user-msg-bg: #404144; /* Darker grey for user bubbles */
-            --bot-msg-bg: #404144; /* Same or similar for bot bubbles in this style */
-            --input-bg: #404144; /* Dark grey for input */
-            --input-border: #505154; /* Subtle border */
-            --button-bg: #505154; /* Dark grey for buttons */
-            --button-hover-bg: #606164; /* Slightly lighter hover */
-            --button-text: #e0e0e0; /* Light text for buttons */
-            --chat-border: #404144; /* Dark border */
-            --input-area-border: #404144; /* Dark border */
-            --scrollbar-thumb: #555; /* Dark scrollbar thumb */
-            --scrollbar-track: #303134; /* Dark scrollbar track */
+            --bg-color: #202123;
+            --container-bg: #303134;
+            --text-color: #e0e0e0;
+            --user-msg-bg: #404144;
+            --bot-msg-bg: #404144;
+            --input-bg: #404144;
+            --input-border: #505154;
+            --button-bg: #505154;
+            --button-hover-bg: #606164;
+            --button-text: #e0e0e0;
+            --chat-border: #404144;
+            --input-area-border: #404144;
+            --scrollbar-thumb: #555;
+            --scrollbar-track: #303134;
         }
         /* --- End CSS Variables --- */
 
@@ -52,16 +51,16 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--bg-color); /* Use variable */
+            background-color: var(--bg-color);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100%;
-            overflow: hidden; /* Prevent body scroll */
-            color: var(--text-color); /* Use variable */
+            overflow: hidden;
+            color: var(--text-color);
             overscroll-behavior-y: contain;
         }
-        body { /* Default to dark mode */
+        body {
             background-color: var(--bg-color);
             color: var(--text-color);
         }
@@ -77,12 +76,12 @@
             overflow: hidden;
         }
         .chat-messages {
-            flex-grow: 1; /* Sohbet alanı kalan yüksekliği kaplar */
+            flex-grow: 1;
             padding: 20px;
-            overflow-y: auto; /* Mesajlar arttıkça kaydırma çubuğu çıkar */
+            overflow-y: auto;
             border-bottom: 1px solid var(--chat-border);
             display: flex;
-            flex-direction: column; /* Mesajların yukarıdan aşağıya sıralanması için */
+            flex-direction: column;
             scrollbar-width: thin;
             scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
@@ -97,7 +96,7 @@
             border-radius: 18px;
             line-height: 1.6;
             max-width: 80%;
-            word-wrap: break-word; /* Uzun kelimeleri alt satıra indir */
+            word-wrap: break-word;
             opacity: 0;
             transform: translateY(20px);
             animation: fadeInMessage 0.3s ease forwards;
@@ -108,14 +107,14 @@
         .user-message {
             background-color: var(--user-msg-bg);
             color: var(--text-color);
-            align-self: flex-end; /* Sağa hizala */
+            align-self: flex-end;
             border-bottom-right-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
         .bot-message {
             background-color: var(--bot-msg-bg);
             color: var(--text-color);
-            align-self: flex-start; /* Sola hizala */
+            align-self: flex-start;
             border-bottom-left-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
@@ -159,7 +158,7 @@
             font-size: 1rem;
             background-color: var(--input-bg);
             color: var(--text-color);
-            resize: none; /* textarea olmasa da */
+            resize: none;
             line-height: 1.5;
             margin-right: 18px;
         }
@@ -176,12 +175,12 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 1.2em;
-            width: 20px; /* ikonun kapladığı alan */
-            height: 20px; /* ikonun kapladığı alan */
+            width: 20px;
+            height: 20px;
             transition: color 0.2s ease-in-out;
         }
         .chat-input button:hover { color: var(--button-hover-bg); }
-        .chat-input button span { display: none; } /* Gönder yazısını gizle */
+        .chat-input button span { display: none; }
 
         @media (max-width: 768px) {
             .chat-container {
@@ -191,18 +190,16 @@
             .chat-messages { border-top-left-radius: 0; border-top-right-radius: 0; padding: 15px; }
             .chat-input { padding: 10px 15px; }
             .chat-input input[type="text"] { padding: 10px 15px; }
-             /* İkon boyutlarını küçült */
             .file-input-label, .chat-input button {
                 padding: 8px; font-size: 1em; width: 20px; height: 20px;
             }
         }
     </style>
-
 </head>
 <body class="dark-mode">
     <div class="chat-container" id="chatContainer">
         <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Selam ben Ahraz. Matematik, tarih, saat, plaka, IOR numaraları gibi konulara hakimim. Görsel ekleyip sonrasında 'ocr' komutunu kullanarak metnini alabilirsin.</div>
+    
         </div>
         <div class="chat-input">
             <div class="file-input-wrapper">
@@ -220,7 +217,8 @@
     </div>
 
     <script src="./clean.js" defer></script>
+    <script src="./stemmer.js" defer></script>
     <script src="./script.js" defer></script>
 
-</body>
+    </body>
 </html>
