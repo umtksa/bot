@@ -64,6 +64,7 @@ async function loadBotData() {
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
+    messageDiv.style.whiteSpace = 'pre-line'; // Bu satır \n karakterlerini işler
     messageDiv.textContent = text;
     chatMessages.appendChild(messageDiv);
     setTimeout(() => {
@@ -88,6 +89,8 @@ function cleanSearchTerm(input) {
     return cleaned;
 }
 
+// Bu fonksiyon sadece kullanıcı girdilerindeki gereksiz boşlukları temizlemek için kullanılacak.
+// Örneğin, "  merhaba   dünya  " girdisini "merhaba dünya" yapar.
 function cleanTextForDisplay(text) {
     if (!text) return "";
     return text.replace(/\s+/g, ' ').trim();
@@ -148,17 +151,18 @@ function processUserInput(input) {
         if (botResponse.includes('{{currentDate}}')) {
             botResponse = botResponse.replace('{{currentDate}}', new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
         }
-        return botResponse;
+        return botResponse; // Botun cevabı olduğu gibi (varsa \n'ler ile) döner.
     } else {
         return "Üzgünüm, sorunuzu tam olarak anlayamadım.";
     }
 }
 
 async function sendMessage() {
-    const messageText = userInput.value.trim();
+    const messageText = userInput.value.trim(); // Kullanıcı girdisi baştan ve sondan trimlenir.
 
     if (stagedFile && messageText.toLowerCase().includes('ocr')) {
-        addMessage(messageText, 'user');
+        // Kullanıcı "ocr" komutunu yazdığında, bu komut cleanTextForDisplay'den geçerek gösterilir.
+        addMessage(cleanTextForDisplay(messageText), 'user');
         userInput.value = '';
         userInput.focus();
         await performOcr(stagedFile);
@@ -167,21 +171,22 @@ async function sendMessage() {
     }
 
     if (messageText !== '') {
+        // Kullanıcının yazdığı mesaj cleanTextForDisplay ile temizlenir.
         addMessage(cleanTextForDisplay(messageText), 'user');
         userInput.value = '';
         userInput.focus();
         if (stagedFile) {
-            addMessage(`'${file.name}' eklendi.`, "bot");
+            addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
         }
         setTimeout(() => {
             const botResponse = processUserInput(messageText);
-            addMessage(botResponse, 'bot');
+            addMessage(botResponse, 'bot'); // Bot cevabı olduğu gibi.
         }, 300 + Math.random() * 500);
         return;
     }
 
     if (messageText === '' && stagedFile) {
-        addMessage(`'${file.name}' eklendi.`, "bot");
+        addMessage(`'${stagedFile.name}' eklendi.`, "bot"); // Dosya adı mesajı olduğu gibi.
         userInput.focus();
         return;
     }
@@ -196,11 +201,12 @@ async function performOcr(imageFile) {
         addMessage("OCR için bir görsel dosyası bulunamadı.", "bot");
         return;
     }
-    //addMessage(`OCR...`, "bot");
+    // addMessage(`OCR işlemi başlıyor...`, "bot"); // İsteğe bağlı bilgilendirme
     try {
         const { data: { text } } = await ocrWorker.recognize(imageFile);
         if (text && text.trim()) {
-            addMessage(`${cleanTextForDisplay(text)}`, "bot");
+            // OCR'DAN GELEN METİN DOĞRUDAN KULLANILIR, YENİ SATIRLAR KORUNUR.
+            addMessage(text, "bot");
         } else {
             addMessage(`'${imageFile.name}' görselinde metin bulunamadı!`, "bot");
         }
@@ -226,13 +232,13 @@ fileInput.addEventListener('change', (event) => {
         const file = files[0];
         if (file.type.startsWith('image/')) {
             stagedFile = file;
-            addMessage(`'${file.name}' eklendi.`, "bot"); // Güncellendi
+            addMessage(`'${file.name}' eklendi.`, "bot");
             userInput.focus();
         } else {
             addMessage("Şimdilik sadece görsel dosyaları seçebilirsin!", "bot");
             stagedFile = null;
         }
-        event.target.value = '';
+        event.target.value = ''; // Input'u sıfırla ki aynı dosya tekrar seçilebilsin
     }
 });
 
