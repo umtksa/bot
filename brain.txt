@@ -1,4 +1,4 @@
-+ (adana|adana'nın|adananın) (plaka|plakası) [kodu|kodunu|numarasını|numarası] [ne|nedir|kaç|kaçtır]
++ adana['nın|nın] (plaka|plakası)
 - Adana'nın plakası 01'dir.
 - Plaka kodu 01.
 - 01 Adana'nın plakasıdır.
