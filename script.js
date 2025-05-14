@@ -50,7 +50,7 @@ async function loadBotData() {
         const options = {
             includeScore: true,
             keys: ['cleanedKey'],
-            threshold: 0.4,
+            threshold: 0.5,
             ignoreLocation: true,
         };
         fuse = new Fuse(searchableItems, options);
