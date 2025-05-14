@@ -13,6 +13,11 @@
 + naber
 - Yuvarlanıp gidiyoruz, senden naber?
 
++ adana('nın|'nin)?\s+plaka(sı)?\s+((kodu|numarası)(\s+nedir)?|nedir)\s*[?.!]?
+- Adana'nın plaka kodu 01'dir.
+- Adana'nın plakası 01.
+
+
 # Bu satır yorum satırıdır, işlemeye dahil edilmez.
 # Alt kural (Fallback)
 + .*
