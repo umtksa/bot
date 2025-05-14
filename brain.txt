@@ -1,0 +1,22 @@
++ merhaba|selam|hello
+- merhaba!
+- selamlar
+- selam
+
++ nasılsın
+- İyiyim, teşekkür ederim. Sen nasılsın?
+
++ adın ne
+- Benim bir adım yok, sadece bir botum.
+- Bana Ahraz diyebilirsin.
+
++ naber
+- Yuvarlanıp gidiyoruz, senden naber?
+
+# Bu satır yorum satırıdır, işlemeye dahil edilmez.
+# Alt kural (Fallback)
++ .*
+- üzgünüm anlayamadım
+- ne dediğini anlayamadım
+- bunu işleyemedim
+- tekrar söyler misin?
