@@ -1,11 +1,9 @@
-// script.js
-
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const fileInput = document.getElementById('fileInput');
 const fileInputLabel = document.querySelector('.file-input-label');
-const chatContainer = document.getElementById('chatContainer'); // Artık sürükle-bırak için kullanılmayacak
+const chatContainer = document.getElementById('chatContainer');
 
 let botData = {};
 let fuse;
@@ -13,7 +11,7 @@ let ocrWorker;
 let stagedFile = null;
 
 const turkishStopwords = new Set([
-    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba"
+    "nedir", "kaçtır", "kaç", "kodu", "kodunu", "numarasını", "numarası", "neresidir", "ilinin", "ne", "peki", "canım", "ahraz", "ahrazcım", "biliyor", "musun", "mü", "mı", "mi", "değil", "söyler", "söyleyebilir", "misin", "hatırlatır", "söyle", "bana", "senin", "verir", "müsün", "mısın", "lütfen", "acaba", "ben"
 ]);
 
 async function initializeOcrWorker() {
@@ -22,7 +20,7 @@ async function initializeOcrWorker() {
         ocrWorker = await Tesseract.createWorker('tur+eng');
         await ocrWorker.loadLanguage('tur+eng');
         await ocrWorker.initialize('tur+eng');
-        console.log("OCR motoru hazır. Ataç simgesiyle görsel ekleyebilirsiniz."); // Güncellendi
+        console.log("OCR motoru hazır. Ataç simgesiyle görsel ekleyebilirsiniz.");
     } catch (error) {
         console.error("Tesseract OCR motoru başlatılırken hata oluştu:", error);
         addMessage("OCR motoru başlatılırken bir sorun oluştu.", "bot");
@@ -59,7 +57,7 @@ async function loadBotData() {
         console.log("Fuse.js arama motoru başlatıldı.");
     } catch (error) {
         console.error("Bot verileri veya Fuse.js yüklenirken bir hata oluştu:", error);
-        addMessage("Veriler yüklenirken bir sorun oluştu. Lütfen data.json dosyasının doğru formatta ve erişilebilir olduğundan emin olun.", "bot");
+        addMessage("json şeyoldu!", "bot");
     }
 }
 
@@ -221,10 +219,6 @@ userInput.addEventListener('keypress', function(event) {
     }
 });
 
-// Sürükle-Bırak olay dinleyicileri kaldırıldı
-// chatContainer.addEventListener('dragover', ...);
-// chatContainer.addEventListener('dragleave', ...);
-// chatContainer.addEventListener('drop', ...);
 
 fileInput.addEventListener('change', (event) => {
     const files = event.target.files;
