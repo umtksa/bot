@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="ahraz">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <title>ahraz</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
         /* --- CSS Variables for Dark Mode --- */
         :root {
@@ -20,7 +16,7 @@
             --container-bg: #fff;
             --text-color: #333;
             --user-msg-bg: #f1f0f0;
-            --bot-msg-bg: #dcf8c6;
+            --bot-msg-bg: #dcf8c6; /* Bu renge ihtiyaç kalmayabilir, bot mesajı da tek renk olabilir dark mode'da */
             --input-bg: #f9f9f9;
             --input-border: #ccc;
             --button-bg: #9a9a9a;
@@ -31,7 +27,6 @@
             --scrollbar-thumb: #888;
             --scrollbar-track: #f1f1f1;
         }
-
         body.dark-mode {
             --bg-color: #202123; /* Dark background */
             --container-bg: #303134; /* Slightly lighter dark for container */
@@ -50,11 +45,9 @@
         }
         /* --- End CSS Variables --- */
 
-
         html {
             height: 100%;
         }
-
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -68,12 +61,10 @@
             color: var(--text-color); /* Use variable */
             overscroll-behavior-y: contain;
         }
-
         body { /* Default to dark mode */
             background-color: var(--bg-color);
             color: var(--text-color);
         }
-
         .chat-container {
             width: 90%;
             max-width: 700px;
@@ -85,18 +76,16 @@
             max-height: 800px;
             overflow: hidden;
         }
-
         .chat-messages {
-            flex-grow: 1;
+            flex-grow: 1; /* Sohbet alanı kalan yüksekliği kaplar */
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; /* Mesajlar arttıkça kaydırma çubuğu çıkar */
             border-bottom: 1px solid var(--chat-border);
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Mesajların yukarıdan aşağıya sıralanması için */
             scrollbar-width: thin;
             scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
-
         .chat-messages::-webkit-scrollbar { width: 8px; }
         .chat-messages::-webkit-scrollbar-track { background: var(--scrollbar-track); }
         .chat-messages::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
@@ -108,28 +97,25 @@
             border-radius: 18px;
             line-height: 1.6;
             max-width: 80%;
-            word-wrap: break-word;
+            word-wrap: break-word; /* Uzun kelimeleri alt satıra indir */
             opacity: 0;
             transform: translateY(20px);
             animation: fadeInMessage 0.3s ease forwards;
         }
-
         @keyframes fadeInMessage {
             to { opacity: 1; transform: translateY(0); }
         }
-
         .user-message {
             background-color: var(--user-msg-bg);
             color: var(--text-color);
-            align-self: flex-end;
+            align-self: flex-end; /* Sağa hizala */
             border-bottom-right-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
-
         .bot-message {
             background-color: var(--bot-msg-bg);
             color: var(--text-color);
-            align-self: flex-start;
+            align-self: flex-start; /* Sola hizala */
             border-bottom-left-radius: 5px;
             box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
         }
@@ -143,14 +129,11 @@
             border-bottom-left-radius: 10px;
             border-bottom-right-radius: 10px;
         }
-
         .file-input-wrapper {
             position: relative;
             margin-right: 10px;
         }
-
         .file-input-wrapper input[type="file"] { display: none; }
-
         .file-input-label {
             display: flex;
             align-items: center;
@@ -176,7 +159,7 @@
             font-size: 1rem;
             background-color: var(--input-bg);
             color: var(--text-color);
-            resize: none;
+            resize: none; /* textarea olmasa da */
             line-height: 1.5;
             margin-right: 18px;
         }
@@ -193,12 +176,12 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 1.2em;
-            width: 20px;
-            height: 20px;
+            width: 20px; /* ikonun kapladığı alan */
+            height: 20px; /* ikonun kapladığı alan */
             transition: color 0.2s ease-in-out;
         }
         .chat-input button:hover { color: var(--button-hover-bg); }
-        .chat-input button span { display: none; }
+        .chat-input button span { display: none; } /* Gönder yazısını gizle */
 
         @media (max-width: 768px) {
             .chat-container {
@@ -208,19 +191,13 @@
             .chat-messages { border-top-left-radius: 0; border-top-right-radius: 0; padding: 15px; }
             .chat-input { padding: 10px 15px; }
             .chat-input input[type="text"] { padding: 10px 15px; }
+             /* İkon boyutlarını küçült */
             .file-input-label, .chat-input button {
                 padding: 8px; font-size: 1em; width: 20px; height: 20px;
             }
         }
     </style>
 
-
-    <script src="clean.js" defer></script>
-    <script src="script.js" defer></script>
-
-
-</body>
-</html>
 </head>
 <body class="dark-mode">
     <div class="chat-container" id="chatContainer">
@@ -242,6 +219,8 @@
         </div>
     </div>
 
-    <script src="script.js" defer></script>
+    <script src="./clean.js" defer></script>
+    <script src="./script.js" defer></script>
+
 </body>
 </html>

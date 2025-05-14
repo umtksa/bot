@@ -16,20 +16,27 @@ function cleanAndTokenize(text) { // 'export' kelimesi kaldırıldı
     let cleanedText = text.toLowerCase();
 
     // 2. Özel isimlere eklenen tırnaklı ekleri kaldır (örn: Ankara'nın -> Ankara)
+    // Regex: ' karakterini ve ardından gelen boşluk olmayan (herhangi bir) karakter grubunu bul.
+    // Bu desenleri boş string ile değiştiriyoruz. Bu, kelimeye bitişik tırnak ve eki kaldırır.
+    // Global flag (g) ile metindeki tüm eşleşmeleri değiştir.
     cleanedText = cleanedText.replace(/'[^\\s]*/g, '');
 
     // 3. Diğer yaygın noktalama işaretlerini kaldır
+    // Noktalama işaretlerini bir karakter sınıfı içinde listeledik.
+    // Global flag (g) ile metindeki tüm eşleşmeleri değiştir.
     cleanedText = cleanedText.replace(/[.,!?;:"()\[\]{}]/g, '');
 
     // 4. Birden fazla ardışık boşluğu tek boşluğa indirge ve baştaki/sondaki boşlukları sil
+    // Regex: Bir veya daha fazla boşluk karakterini bul. Global flag (g) ile tümünü değiştir.
     cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
 
     // 5. Metni boşluklara göre kelimelere (tokens) ayır
+    // trim() sonrası split('') boş stringe sahip tek elemanlı dizi dönebilir, bu yüzden filter lazım.
     const tokens = cleanedText.split(' ');
 
     // 6. Bölme işleminden sonra oluşmuş olabilecek boş string token'ları filtrele
     return tokens.filter(token => token.length > 0);
 }
 
-// NOT: 'export' kullanılmadığı için bu fonksiyon, script.js'de
+// clean.js dosyasındaki cleanAndTokenize fonksiyonu, script.js'de
 // bu dosya HTML'de ondan önce yüklendiğinde global olarak erişilebilir olacak.
