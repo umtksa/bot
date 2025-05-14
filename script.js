@@ -21,7 +21,8 @@ function displayMessage(message, sender) {
 bot.loadFile("brain.rive").then(() => {
     console.log("RiveScript loaded!");
     bot.sortReplies(); // RiveScript'in yanıtları sıralamasını sağla
-    displayMessage("Merhaba! Ben RiveScript botuyum. Nasıl yardımcı olabilirim?", "bot");
+    // İlk hoş geldin mesajı için bir delay eklemeyebiliriz veya ekleyebiliriz
+    displayMessage("Merhaba! Ben Ahraz. Nasıl yardımcı olabilirim?", "bot");
 
 }).catch(error => {
     console.error("Error loading RiveScript:", error);
@@ -46,14 +47,25 @@ async function sendMessage() {
 
     // RiveScript'ten yanıt al (await kullanarak asenkron işlemi bekle)
     try {
+        // Yanıt gelmeden önce bir "..." veya benzeri yazma göstergesi ekleyebiliriz
+        // Örneğin: displayMessage("...", "bot"); // Bu kısmı isterseniz ekleyebilirsiniz
+
         const reply = await bot.reply("local-user", message); // "local-user" kullanıcı ID'si
 
-        // Bot yanıtını göster
-        // Yanıt gelmeden önce bir "..." gösterilebilir, isteğe bağlı
-        // Örneğin: displayMessage("...", "bot"); sonra güncelleyebilirsiniz.
-        displayMessage(reply, "bot");
+        // Bot yanıtını göstermeden önce rastgele bir gecikme ekle
+        const delay = 300 + Math.random() * 500; // 300ms ile 800ms arasında rastgele gecikme (300 + 0-499.99)
+
+        setTimeout(() => {
+            // Yazma göstergesini kaldırma (eğer eklediyseniz)
+            // Örneğin: chatMessages.lastChild.remove();
+
+            // Bot yanıtını göster
+            displayMessage(reply, "bot");
+        }, delay);
+
     } catch (error) {
         console.error("Error getting RiveScript reply:", error);
+        // Hata durumunda hata mesajını hemen göster
         displayMessage("Üzgünüm, bir hata oluştu. Tekrar deneyin.", "bot");
     }
 }

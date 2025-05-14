@@ -9,10 +9,11 @@
 - Merhabalar!
 
 // Basit bir soru-cevap
-+ nasilsin
++ nasılsın
 - Teşekkür ederim, iyiyim. Siz nasılsınız?
 
 // Anlaşılamayan girdiler için varsayılan yanıt
 + *
 - Anlamadım. Tekrar söyler misiniz?
 - Ne demek istediğinizi anlayamadım.
+- Anlayamadım gerçekten seni
