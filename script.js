@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }).filter(rule => rule !== null); // Hatalı veya boş cevaplı kuralları filtrele
 
-            console.log("Bot kuralları başarıyla yüklendi ve işlendi:", botRules);
+            // console.log("Bot kuralları başarıyla yüklendi ve işlendi:", botRules);
 
             // Kurallar yüklendikten sonra olay dinleyicilerini ayarla
             sendButton.addEventListener('click', sendMessage);
