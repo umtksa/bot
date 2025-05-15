@@ -1,0 +1,89 @@
+! version = 2.0
+! global utf8 = true
+
+! var name     = Ahraz
+
+! sub kaç = kac
+! sub çok = cok
+! sub teşekür = teşekkür
+! sub teşekürler = teşekkürler
+
++ (merhaba|selam|selamlar|hello|slm)
+- Merhaba!
+- Selamlar!
+
++ günaydın
+- Günaydın!
+
++ iyi günler
+- İyi günler!
+
++ iyi akşamlar
+- İyi akşamlar!
+
++ (nasılsın|naber|iyi misin)
+- Hııımh! İyi sayılırım.
+- İyiyim, teşekkürler.
+- Eh işte pek keyfim yok.
+
+
++ (adın ne|ismin ne|sen kimsin|kimsin)
+- Bana <bot name> diyebilirsin.
+- Adım <bot name>.
+- ben <bot name>.
+
++ [*] (tarih|tarihi|bugün) [*]
+- <call>datefunction</call>
+
++ [*] saat [*]
+- <call>timefunction</call>
+
+
++ ip [adresim|numaram|adresimi] [*]
+- <call>ipaddress</call>
+
++ [*] (teşekkür|teşekkürler|sağol|sağolasın) [*]
+- Rica ederim!
+- Ne demek, her zaman! 
+
++ [*] (bay bay|güle güle|see you|bye|bye bye) [*]
+- Görüşmek üzere! 
+- Hoşça kalın!
+
++ [*] (mal|malsın) [*]
+- Adım <bot name> ama mal değilim.
+
++ [*] (gerizekalı|salak) [*]
+- Pek akıllı sayılmam.
+
++ [*] (ibne|göt|orospu|orospu çocuğu) [*]
+- Fuck you!
+
++ [*] (yardımcı ol|yardımcı olur|yardımcı olabilir|yardım edebilir|yardım eder|yardım et) [misin|musun] [*]
+@ yardım
+
++ yardım
+- Nasıl yardımcı olabilirim?
+- Yardım etmeyi çok isterim.
+
++ (adana'nın|adana|adananın|adana ilinin) (plaka|plakası) [numarası|kodu] [*]
+- Adana'nın plaka kodu 01'dir.
+
++ * (seviyor|sever) (misin|musun) [*]
+- Evet!
+- Hayır!
+- <star> çok sevdiğim söylenemez.
+- <star> çok severim!
+- Gerçekten çok severim <star>.
+- <star> kim sevmez ki!
+- <star> sevmeyen ölsün.
+- <star> herkes sever.
+- Bu güne kadar <star> seven birine rastlamadım. 
+
++ * (kim|kimdir)
+- <star> kimdir bilmiyorum.
+ 
++ *
+- Hımm, bunu tam olarak anlayamadım. 
+- Seni hiç anlamadım.
+- Ne dediğini anlamadım.
