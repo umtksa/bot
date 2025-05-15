@@ -12,6 +12,10 @@
 - Merhaba!
 - Selamlar!
 
++ [*] <bot name>
+- Efendim!
+- Buyrun benim!
+
 + günaydın
 - Günaydın!
 
@@ -38,7 +42,6 @@
 + [*] saat [*]
 - <call>timefunction</call>
 
-
 + ip [adresim|numaram|adresimi] [*]
 - <call>ipaddress</call>
 
@@ -53,7 +56,7 @@
 + [*] (mal|malsın) [*]
 - Adım <bot name> ama mal değilim.
 
-+ [*] (gerizekalı|salak) [*]
++ [*] (gerizekalı|geri zekalı|salak) [*]
 - Pek akıllı sayılmam.
 
 + [*] (ibne|göt|orospu|orospu çocuğu) [*]
