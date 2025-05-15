@@ -4,8 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
-    const fileInput = document.getElementById('fileInput'); // Dosya girişi için
+    const fileInput = document.getElementById('fileInput');
     const bot = new RiveScript({ utf8: true });
+
+    // Son yüklenen görseli saklamak için
+    let lastUploadedImageFile = null;
 
     // Küçük harfe dönüştürme fonksiyonu
     function turkceKucukHarfeDonustur(text) {
@@ -14,6 +17,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return text;
         }
         return text.toLocaleLowerCase('tr-TR');
+    }
+
+    // RGB'den HEX'e çevir
+    function rgbToHex(r, g, b) {
+        return (
+            "#" +
+            [r, g, b]
+                .map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? "0" + hex : hex;
+                })
+                .join("")
+        );
+    }
+
+    // Renk dairesi HTML'i üret (büyük daire, sadece hex kodu)
+    function colorCircle(rgbArr) {
+        const hex = rgbToHex(...rgbArr);
+        return `<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${hex};margin-right:8px;vertical-align:middle;"></span>`;
     }
 
     bot.setSubroutine('ipaddress', async function(rs, args) {
@@ -55,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive']);
             bot.sortReplies();
-            addBotMessage("Merhaba! Ben Ahraz. Matematik, ip adresi, tarih, saat, plaka kodları, ior değerleri ve OCR gibi yeteneklerim var");
+            addBotMessage("Merhaba! Ben Ahraz. Matematik, ip adresi, tarih, saat, plaka kodları, ior değerleri, OCR ve renk analizi gibi yeteneklerim var.");
             console.log("Bot başarıyla yüklendi ve hazır. Dosyalar: ahraz.rive, genel.rive, plaka.rive");
         } catch (error) {
             console.error("Bot yüklenirken hata oluştu:", error);
@@ -75,6 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', 'bot-message');
         messageElement.textContent = message;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addBotHtmlMessage(html) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        messageElement.innerHTML = html;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -111,6 +141,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Görsel yüklendiğinde kullanıcıdan seçim alınır
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            fileInput.value = '';
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            addBotMessage("Lütfen bir resim dosyası seçin (örneğin .png, .jpg).");
+            fileInput.value = '';
+            return;
+        }
+        addUserMessage(`${file.name}`);
+        lastUploadedImageFile = file;
+        addBotMessage("OCR veya renk analizi yapabilirim. Lütfen 'ocr' veya 'renk' yaz.");
+        fileInput.value = '';
+        userInput.focus(); 
+    });
+
+    // Sürükle-bırak ile görsel yükleme desteği
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+        chatContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            chatContainer.classList.add('drag-over');
+        });
+        chatContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            chatContainer.classList.remove('drag-over');
+        });
+        chatContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            chatContainer.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (!file.type.startsWith('image/')) {
+                    addBotMessage("Lütfen bir resim dosyası bırakın (örneğin .png, .jpg).");
+                    return;
+                }
+                addUserMessage(`${file.name}`);
+                lastUploadedImageFile = file;
+                addBotMessage("OCR veya renk analizi yapabilirim. Lütfen 'ocr' veya 'renk' yaz.");
+            }
+        });
+    }
+
+    // Kullanıcıdan gelen mesajı kontrol et
     async function sendMessage() {
         const originalMessageText = userInput.value.trim();
         if (originalMessageText === '') return;
@@ -119,6 +197,62 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.value = '';
         userInput.focus();
 
+        // Eğer son yüklenen bir görsel varsa ve kullanıcı seçim yaptıysa
+        if (lastUploadedImageFile) {
+            const choice = originalMessageText.toLocaleLowerCase('tr-TR');
+            if (choice.includes('ocr')) {
+                addBotMessage("OCR yapıyorum...");
+                try {
+                    const worker = await Tesseract.createWorker('tur+eng', 1, {
+                        logger: m => { /* konsola loglama */ }
+                    });
+                    const { data: { text } } = await worker.recognize(lastUploadedImageFile);
+                    await worker.terminate();
+                    if (text && text.trim() !== '') {
+                        addBotMessage(`${text.trim()}`);
+                    } else {
+                        addBotMessage("Resimde okunabilir bir metin bulunamadı veya metin boş.");
+                    }
+                } catch (error) {
+                    console.error("Tesseract.js hatası:", error);
+                    addBotMessage("Resim işlenirken bir hata oluştu. Lütfen dosya formatını kontrol edin veya daha sonra tekrar deneyin.");
+                }
+                lastUploadedImageFile = null;
+                return;
+            } else if (choice.includes('renk')) {
+                addBotMessage("Renk analizi yapıyorum...");
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    try {
+                        const colorThief = new ColorThief();
+                        const dominant = colorThief.getColor(img);
+                        const palette = colorThief.getPalette(img, 6);
+
+                        let html = `Baskın renk:<br>${colorCircle(dominant)} ${rgbToHex(...dominant)}<br><br>`;
+                        html += `Renk paleti:<br>`;
+                        palette.forEach((c, i) => {
+                            html += `${colorCircle(c)}${rgbToHex(...c)}<br>`;
+                        });
+
+                        addBotHtmlMessage(html);
+                    } catch (e) {
+                        addBotMessage("Renk analizi sırasında hata oluştu.");
+                    }
+                };
+                img.onerror = function () {
+                    addBotMessage("Görsel yüklenemedi, renk analizi yapılamadı.");
+                };
+                img.src = URL.createObjectURL(lastUploadedImageFile);
+                lastUploadedImageFile = null;
+                return;
+            }
+            // Eğer seçim yapılmadıysa, normal akışa devam etmesin
+            addBotMessage("Lütfen 'ocr' veya 'renk' yazarak ne yapmak istediğinizi belirtin.");
+            return;
+        }
+
+        // Matematik ve RiveScript akışı
         const processedMessage = turkceKucukHarfeDonustur(originalMessageText);
         const mathResult = handleMathExpression(processedMessage);
 
@@ -136,54 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // Tesseract.js ile resimden metin okuma
-    fileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) {
-            fileInput.value = ''; // Input'u temizle
-            return;
-        }
-
-        if (!file.type.startsWith('image/')) {
-            addBotMessage("Lütfen bir resim dosyası seçin (örneğin .png, .jpg).");
-            fileInput.value = ''; // Hatalı seçim sonrası input'u temizle
-            return;
-        }
-
-        addUserMessage(`${file.name}`);
-        addBotMessage("OCR yapıyorum...");
-
-        try {
-
-            const worker = await Tesseract.createWorker('tur+eng', 1, {
-                logger: m => {
-                    console.log(m); // İşlem aşamalarını konsolda gösterir
-                    if (m.status === 'recognizing text') {
-
-                    }
-                }
-            });
-
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate(); // Worker'ı sonlandırarak kaynakları serbest bırakın
-
-            if (text && text.trim() !== '') {
-                addBotMessage(`${text.trim()}`);
-
-
-            } else {
-                addBotMessage("Resimde okunabilir bir metin bulunamadı veya metin boş.");
-            }
-
-        } catch (error) {
-            console.error("Tesseract.js hatası:", error);
-            addBotMessage("Resim işlenirken bir hata oluştu. Lütfen dosya formatını kontrol edin veya daha sonra tekrar deneyin.");
-        } finally {
-            // Aynı dosyayı tekrar seçebilmek için file input değerini sıfırla
-            fileInput.value = '';
-        }
-    });
 
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (event) => {
