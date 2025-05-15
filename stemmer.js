@@ -9,7 +9,44 @@ const processingDictionary = {
     "plaka": ["plaka", "plakası", "plakasını"], // "plaka" kelimesinin kendisini de ekledik
     "numara": ["numara", "numarası"], // "numara" kelimesinin kendisini de ekledik
     "kod": ["kod", "kodu", "kodunu", "kodlu"], // "kod" kelimesinin kendisini ekledik
-
+    "su": ["su", "suyun"], // "su" kelimesinin kendisini ekledik
+    // iller
+    "adana": ["adana", "adanada", "adananın"],
+    "adıyaman": ["adıyaman", "adıyamanda", "adıyamanın"],
+    "afyon": ["afyon", "afyonda", "afyonun"],
+    "ağrı": ["ağrı", "ağrıda", "ağrının"],
+    "amasya": ["amasya", "amasyada", "amasyanın"],
+    "ankara": ["ankara", "ankarada", "ankaranın"],
+    "antalya": ["antalya", "antalyada", "antalyanın"],
+    "artvin": ["artvin", "artvinde", "artvinin"],
+    "aydın": ["aydın", "aydında", "aydının"],
+    "balıkesir": ["balıkesir", "balıkesirde", "balıkesirin"],
+    "bilecik": ["bilecik", "bilecikte", "bilecikin"],
+    "bingöl": ["bingöl", "bingöl'de", "bingöl'ün"],
+    "bitlis": ["bitlis", "bitlis'te", "bitlis'in"],
+    "bolu": ["bolu", "boluda", "bolunun"],
+    "burdur": ["burdur", "burdura", "burdurun"],
+    "bursa": ["bursa", "bursada", "bursanın"],
+    "çanakkale": ["çanakkale", "çanakkalede", "çanakkalenin"],
+    "çankırı": ["çankırı", "çankırıda", "çankırının"],
+    "çorum": ["çorum", "çorumda", "çorumun"],
+    "denizli": ["denizli", "denizlide", "denizlinin"],
+    "diyarbakır": ["diyarbakır", "diyarbakırda", "diyarbakırın"],
+    "edirne": ["edirne", "edirnede", "edirnenin"],
+    "elazığ": ["elazığ", "elazığda", "elazığın"],
+    "erzincan": ["erzincan", "erzincanda", "erzincanın"],
+    "erzurum": ["erzurum", "erzurumda", "erzurumun"],
+    "eskişehir": ["eskişehir", "eskişehirdede", "eskişehirin"],
+    "gaziantep": ["gaziantep", "gaziantepte", "gaziantepin"],
+    "giresun": ["giresun", "giresunda", "giresunun"],
+    "gümüşhane": ["gümüşhane", "gümüşhanede", "gümüşhanenin"],
+    "hakkari": ["hakkari", "hakkaride", "hakkarinin"],
+    "hatay": ["hatay", "hatayda", "hatayın"],
+    "ısparta": ["ısparta", "ıspartada", "ıspartanın"],
+    "istanbul": ["istanbul", "istanbulda", "istanbulun"],
+    "izmir": ["izmir", "izmirdede", "izmirin"],
+    "karabük": ["karabük", "karabükte", "karabükün"],
+    "karaman": ["karaman", "karamanda", "karamanın"]
 };
 
 
