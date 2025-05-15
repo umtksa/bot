@@ -8,7 +8,7 @@
 ! sub teşekür = teşekkür
 ! sub teşekürler = teşekkürler
 
-+ (merhaba|selam|selamlar|hello|slm)
++ (merhaba|merhabalar|selam|selamlar|hello|slm) [*]
 - Merhaba!
 - Selamlar!
 
