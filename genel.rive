@@ -1,0 +1,23 @@
+! version = 2.0
+! global utf8 = true
+
++ (su|suyun) [*] (ior|iorı) [*]
+- Suyun ior değeri 1.325'tir.
+
++ (elmas|elmasın) [*] (ior|iorı) [*]
+- Elmasın ior değeri 2.418'dir.
+
++ (buz|buzun) [*] (ior|iorı) [*]
+- Buzun ior değeri 1.309'dur.
+
++ (cam|camın) [*] (ior|iorı) [*]
+- Camın ior değeri 1.500'dür.
+
++ (yağ|yağın) [*] (ior|iorı) [*]
+- Yağın ior değeri 1.470'dir.
+
++ (bira|biranın) [*] (ior|iorı) [*]
+- Biranın ior değeri 1.345'dir.
+
++ (bal|balın) [*] (ior|iorı) [*]
+- Balın ior değeri 1.484'tür.

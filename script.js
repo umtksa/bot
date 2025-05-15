@@ -63,16 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function loadBot() {
-        try {
-            await bot.loadFile('ahraz.rive'); // RiveScript dosyanızın adı
-            bot.sortReplies();
-            addBotMessage("Merhaba! Ben Ahraz, size nasıl yardımcı olabilirim?");
-            console.log("Bot başarıyla yüklendi ve hazır.");
-        } catch (error) {
-            console.error("Bot yüklenirken hata oluştu:", error);
-            addBotMessage("Üzgünüm, şu an hizmet veremiyorum. Bot yüklenemedi.");
-        }
+    try {
+        // Hem 'ahraz.rive' hem de 'plaka.rive' dosyalarını bir kerede yükle
+        await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive']);
+
+        // Tüm dosyalar yüklendikten sonra yanıtları sırala
+        bot.sortReplies();
+
+        // Bot yüklendi mesajı
+        // İsteğe bağlı olarak, birden fazla yeteneği olan bir bot için daha genel bir mesaj yazabilirsiniz.
+        addBotMessage("Merhaba! Ben Ahraz."); // veya "Merhaba! Size hem genel konularda hem de plaka sorgulama konusunda yardımcı olabilirim."
+        console.log("Bot başarıyla yüklendi ve hazır. Dosyalar: ahraz.rive, plaka.rive");
+
+    } catch (error) {
+        console.error("Bot yüklenirken hata oluştu:", error);
+        addBotMessage("Üzgünüm, şu an hizmet veremiyorum. Bot yüklenemedi.");
     }
+}
 
     // Kullanıcı mesajını sohbet ekranına ekle
     function addUserMessage(message) {

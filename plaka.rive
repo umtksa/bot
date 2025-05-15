@@ -1,0 +1,248 @@
+! version = 2.0
+! global utf8 = true
+
++ (adana|adananın|adana'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Adana'nın plaka kodu 01'dir.
+
++ (adıyaman|adıyamanın|adıyaman'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Adıyaman'ın plaka kodu 02'dir.
+
++ (afyon|afyonun|afyon'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Afyon'un plaka kodu 03'tür.
+
++ (ağrı|ağrının|ağrı'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Ağrı'nın plaka kodu 04'tür.
+
++ (amasya|amasyanın|amasya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Amasya'nın plaka kodu 05'tir.
+
++ (ankara|ankaranın|ankara'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Ankara'nın plaka kodu 06'dır.
+
++ (antalya|antalyanın|antalya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Antalya'nın plaka kodu 07'dir.
+
++ (artvin|artvinin|artvin'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Artvin'in plaka kodu 08'dir.
+
++ (aydın|aydının|aydın'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Aydın'ın plaka kodu 09'dur.
+
++ (balıkesir|balıkesirin|balıkesir'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Balıkesir'in plaka kodu 10'dur.
+
++ (bilecik|bilecikin|bilecik'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bilecik'in plaka kodu 11'dir.
+
++ (bingöl|bingölun|bingöl'ün) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bingöl'ün plaka kodu 12'dir.
+
++ (bitlis|bitlisin|bitlis'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bitlis'in plaka kodu 13'tür.
+
++ (bolu|bolunun|bolu'nun) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bolu'nun plaka kodu 14'tür.
+
++ (burdur|burdurun|burdur'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Burdur'un plaka kodu 15'tir.
+
++ (bursa|bursanın|bursa'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bursa'nın plaka kodu 16'dır.
+
++ (çanakkale|çanakkalenin|çanakkale'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Çanakkale'nin plaka kodu 17'dir.
+
++ (çankırı|çankırının|çankırı'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Çankırı'nın plaka kodu 18'dir.
+
++ (çorum|çorumun|çorum'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Çorum'un plaka kodu 19'dur.
+
++ (denizli|denizlinin|denizli'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Denizli'nin plaka kodu 20'dir.
+
++ (diyarbakır|diyarbakırın|diyarbakır'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Diyarbakır'ın plaka kodu 21'dir.
+
++ (edirne|edirnenin|edirne'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Edirne'nin plaka kodu 22'dir.
+
++ (elazığ|elazığın|elazığ'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Elazığ'ın plaka kodu 23'tür.
+
++ (erzincan|erzincanın|erzincan'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Erzincan'ın plaka kodu 24'tür.
+
++ (erzurum|erzurumun|erzurum'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Erzurum'un plaka kodu 25'tir.
+
++ (eskişehir|eskişehirin|eskişehir'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Eskişehir'in plaka kodu 26'dır.
+
++ (gaziantep|gaziantepin|gaziantep'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Gaziantep'in plaka kodu 27'dir.
+
++ (giresun|giresunun|giresun'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Giresun'un plaka kodu 28'dir.
+
++ (gümüşhane|gümüşhanenin|gümüşhane'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Gümüşhane'nin plaka kodu 29'dur.
+
++ (hakkari|hakkarinin|hakkari'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Hakkari'nin plaka kodu 30'dur.
+
++ (hatay|hatayın|hatay'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Hatay'ın plaka kodu 31'dir.
+
++ (ısparta|ıspartanın|ısparta'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Isparta'nın plaka kodu 32'dir.
+
++ (mersin|mersinin|mersin'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Mersin'in plaka kodu 33'tür.
+
++ (istanbul|istanbulun|istanbul'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- İstanbul'un plaka kodu 34'tür.
+
++ (izmir|izmirin|izmir'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- İzmir'in plaka kodu 35'tir.
+
++ (kars|karsın|kars'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kars'ın plaka kodu 36'dır.
+
++ (kastamonu|kastamonun|kastamonu'nun) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kastamonu'nun plaka kodu 37'dir.
+
++ (kayseri|kayserin|kayseri'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kayseri'nin plaka kodu 38'dir.
+
++ (kırklareli|kırklarelinin|kırklareli'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kırklareli'nin plaka kodu 39'dur.
+
++ (kırşehir|kırşehirin|kırşehir'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kırşehir'in plaka kodu 40'tır.
+
++ (kocaeli|kocaelinin|kocaeli'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kocaeli'nin plaka kodu 41'dir.
+
++ (konya|konyanın|konya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Konya'nın plaka kodu 42'dir.
+
++ (kütahya|kütahyanın|kütahya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kütahya'nın plaka kodu 43'tür.
+
++ (malatya|malatyanın|malatya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Malatya'nın plaka kodu 44'tür.
+
++ (manisa|manisanın|manisa'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Manisa'nın plaka kodu 45'tir.
+
++ (kahramanmaraş|kahramanmaraşın|kahramanmaraş'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kahramanmaraş'ın plaka kodu 46'dır.
+
++ (mardin|mardinin|mardin'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Mardin'in plaka kodu 47'dir.
+
++ (muğla|muğlanın|muğla'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Muğla'nın plaka kodu 48'dir.
+
++ (muş|muşun|muş'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Muş'un plaka kodu 49'dur.
+
++ (nevşehir|nevşehirin|nevşehir'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Nevşehir'in plaka kodu 50'dir.
+
++ (niğde|niğdenin|niğde'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Niğde'nin plaka kodu 51'dir.
+
++ (ordu|ordunun|ordu'nun) [*] (plaka|plakası) [numarası|kodu] [*]
+- Ordu'nun plaka kodu 52'dir.
+
++ (rize|rizenin|rize'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Rize'nin plaka kodu 53'tür.
+
++ (sakarya|sakaryanın|sakarya'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Sakarya'nın plaka kodu 54'tür.
+
++ (samsun|samsunun|samsun'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Samsun'un plaka kodu 55'tir.
+
++ (siirt|siirtin|siirt'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Siirt'in plaka kodu 56'dır.
+
++ (sinop|sinopun|sinop'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Sinop'un plaka kodu 57'dir.
+
++ (sivas|sivasın|sivas'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Sivas'ın plaka kodu 58'dir.
+
++ (tekirdağ|tekirdağın|tekirdağ'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Tekirdağ'ın plaka kodu 59'dur.
+
++ (tokat|tokatın|tokat'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Tokat'ın plaka kodu 60'tır.
+
++ (trabzon|trabzonun|trabzon'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Trabzon'un plaka kodu 61'dir.
+
++ (tunceli|tuncelinin|tunceli'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Tunceli'nin plaka kodu 62'dir.
+
++ (şanlıurfa|şanlıurfanın|şanlıurfa'nın|urfa|urfanın|urfa'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Şanlıurfa'nın plaka kodu 63'tür.
+
++ (uşak|uşakın|uşak'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Uşak'ın plaka kodu 64'tür.
+
++ (van|vanın|van'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Van'ın plaka kodu 65'tir.
+
++ (yozgat|yozgatın|yozgat'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Yozgat'ın plaka kodu 66'dır.
+
++ (zonguldak|zonguldakın|zonguldak'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Zonguldak'ın plaka kodu 67'dir.
+
++ (aksaray|aksarayın|aksaray'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Aksaray'ın plaka kodu 68'dir.
+
++ (bayburt|bayburtun|bayburt'un) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bayburt'un plaka kodu 69'dur.
+
++ (karaman|karamanın|karaman'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Karaman'ın plaka kodu 70'tır.
+
++ (kırıkkale|kırıkkalenin|kırıkkale'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kırıkkale'nin plaka kodu 71'dir.
+
++ (batman|batmanın|batman'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Batman'ın plaka kodu 72'dir.
+
++ (şırnak|şırnakın|şırnak'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Şırnak'ın plaka kodu 73'tür.
+
++ (bartın|bartının|bartın'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Bartın'ın plaka kodu 74'tür.
+
++ (ardahan|ardahanın|ardahan'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Ardahan'ın plaka kodu 75'tir.
+
++ (ığdır|ığdırın|ığdır'ın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Iğdır'ın plaka kodu 76'dır.
+
++ (yalova|yalovanın|yalova'nın) [*] (plaka|plakası) [numarası|kodu] [*]
+- Yalova'nın plaka kodu 77'dir.
+
++ (karabük|karabükün|karabük'ün) [*] (plaka|plakası) [numarası|kodu] [*]
+- Karabük'ün plaka kodu 78'dir.
+
++ (kilis|kilisin|kilis'in) [*] (plaka|plakası) [numarası|kodu] [*]
+- Kilis'in plaka kodu 79'dur.
+
++ (osmaniye|osmaniyenin|osmaniye'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Osmaniye'nin plaka kodu 80'dir.
+
++ (düzce|düzcenin|düzce'nin) [*] (plaka|plakası) [numarası|kodu] [*]
+- Düzce'nin plaka kodu 81'dir.
+
++ [*] (plaka|plakası) [*]
+- Hangi ilin plaka kodunu öğrenmek istiyorsunuz?
