@@ -36,6 +36,9 @@
 - Adım <bot name>.
 - ben <bot name>.
 
++ * (hava durumu|havadurumu|hava nasıl) [*]
+- <call>weatherfunction <star></call>
+
 + [*] (tarih|tarihi|bugün) [*]
 - <call>datefunction</call>
 
@@ -81,8 +84,6 @@
 
 + * (kim|kimdir)
 - <star> kimdir bilmiyorum.
-
-
 
 + *
 - Hımm, bunu tam olarak anlayamadım. 
