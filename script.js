@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadBot() {
         try {
-            await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive']);
+            await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive', 'abilities.rive']);
             bot.sortReplies();
             addBotMessage("Merhaba! Ben Ahraz. Matematik, ip adresi, tarih, saat, plaka kodları, ior değerleri, OCR ve renk analizi gibi yeteneklerim var.");
             console.log("Bot başarıyla yüklendi ve hazır. Dosyalar: ahraz.rive, genel.rive, plaka.rive");

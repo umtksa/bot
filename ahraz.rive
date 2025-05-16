@@ -30,23 +30,10 @@
 - İyiyim, teşekkürler.
 - Eh işte pek keyfim yok.
 
-
 + (adın ne|ismin ne|sen kimsin|kimsin)
 - Bana <bot name> diyebilirsin.
 - Adım <bot name>.
-- ben <bot name>.
-
-+ * (hava durumu|havadurumu|hava nasıl) [*]
-- <call>weatherfunction <star></call>
-
-+ [*] (tarih|tarihi|bugün) [*]
-- <call>datefunction</call>
-
-+ [*] saat [*]
-- <call>timefunction</call>
-
-+ ip [adresim|numaram|adresimi] [*]
-- <call>ipaddress</call>
+- Ben <bot name>.
 
 + [*] (teşekkür|teşekkürler|sağol|sağolasın) [*]
 - Rica ederim!

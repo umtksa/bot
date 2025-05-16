@@ -1,0 +1,11 @@
++ * (hava durumu|havadurumu|hava nasıl) [*]
+- <call>weatherfunction <star></call>
+
++ [*] (tarih|tarihi|bugün) [*]
+- <call>datefunction</call>
+
++ [*] saat [*]
+- <call>timefunction</call>
+
++ ip [adresim|numaram|adresimi] [*]
+- <call>ipaddress</call>
