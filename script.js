@@ -72,6 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    
+
     bot.setSubroutine('datefunction', function(rs, args) {
         const now = new Date();
         const formattedDate = now.toLocaleDateString('tr-TR', {
