@@ -37,8 +37,8 @@
 
 + (adın ne|ismin ne|sen kimsin|kimsin)
 - Bana <bot name> diyebilirsin.
-- Adım <bot name>, senin?
-- Ben <bot name>, senin adın ne?
+- Adım <bot name>.
+- Ben <bot name>.
 
 + [*] (teşekkür|teşekkürler|sağol|sağolasın) [*]
 - Rica ederim!
@@ -77,22 +77,6 @@
 + * (kim|kimdir)
 - <star> kimdir bilmiyorum.
 
-+ ben kimim
-* <get name> == undefined => Adın ne?
-- Adının <get name> olduğunu söylemiştin.
-
-+ beni tanıyor musun
-* <get name> == undefined => Henüz tanışmadık sanırım, adın neydi?
-- Evet sen <get name> değil misin.
-
-+ adım *
-- <set name=<star>> Memnun oldum <get name>.
-
-+ (benim adım|ismim) *
-- <set name=<star>> Harika bir isim, <get name>. Şimdi hatırlayacağım.
-
-+ adım ismim *
-- <set name=<star>>, Tanıştığımıza memnun oldum.
 
 + [*] (yeteneklerin|yeteneklere|becerilerin|yapabilirsin) [*]
 - Görsel iletirsen OCR yapabilirim.
