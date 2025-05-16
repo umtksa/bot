@@ -3,6 +3,7 @@
 
 ! var name     = Ahraz
 
+
 ! sub kaç = kac
 ! sub çok = cok
 ! sub teşekür = teşekkür
@@ -51,7 +52,7 @@
 + [*] (mal|malsın) [*]
 - Adım <bot name> ama mal değilim.
 
-+ [*] (gerizekalı|geri zekalı|salak) [*]
++ [*] (gerizekalı|geri zekalı|salak|aptal|beyinsiz) [*]
 - Pek akıllı sayılmam.
 
 + [*] (ibne|göt|orospu|orospu çocuğu) [*]
@@ -77,6 +78,11 @@
 + * (kim|kimdir)
 - <star> kimdir bilmiyorum.
 
++ renk analizi [*]
+- Renk analizi yapabilmem için bir görsel iletmen gerekiyor.
+
++ ocr [*]
+- OCR yapabilmem için bir görsel iletmelisin.
 
 + [*] (yeteneklerin|yeteneklere|becerilerin|yapabilirsin) [*]
 - Görsel iletirsen OCR yapabilirim.
