@@ -37,8 +37,8 @@
 
 + (adın ne|ismin ne|sen kimsin|kimsin)
 - Bana <bot name> diyebilirsin.
-- Adım <bot name>.
-- Ben <bot name>.
+- Adım <bot name>, senin?
+- Ben <bot name>, senin adın ne?
 
 + [*] (teşekkür|teşekkürler|sağol|sağolasın) [*]
 - Rica ederim!
@@ -94,6 +94,16 @@
 + adım ismim *
 - <set name=<star>>, Tanıştığımıza memnun oldum.
 
++ [*] (yeteneklerin|yeteneklere|becerilerin|yapabilirsin) [*]
+- Görsel iletirsen OCR yapabilirim.
+- Matematik işlemlerine hakimim.
+- Görselden renk paleti çıkarabilirim.
+- Çat-pat Türkçe biliyorum.
+- İp adresini söyleyebilirim.
+- İstediğin şehirin hava durumuna bakabilirim.
+
++ başka
+- Ne başka?
 
 + *
 - Hımm, bunu tam olarak anlayamadım. 
