@@ -77,7 +77,6 @@
 + * (kim|kimdir)
 - <star> kimdir bilmiyorum.
 
-
 + ben kimim
 * <get name> == undefined => Adın ne?
 - Adının <get name> olduğunu söylemiştin.
