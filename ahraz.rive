@@ -31,7 +31,7 @@
 + iyi akşamlar
 - İyi akşamlar!
 
-+ (nasılsın|naber|iyi misin)
++ (nasılsın|naber|iyi misin) [*]
 - Hııımh! İyi sayılırım.
 - İyiyim, teşekkürler.
 - Eh işte pek keyfim yok.
@@ -78,17 +78,20 @@
 + * (kim|kimdir)
 - <star> kimdir bilmiyorum.
 
-+ renk analizi [*]
-- Renk analizi yapabilmem için bir görsel iletmen gerekiyor.
++ [*] renk (analizi|paleti) [*]
+- Renk analizi yapabilmem için bir görsel iletip sonra "renk" veya "renk analizi yap" falan diyebilirsin.
+- Color thief adlı kütüphane ile bana ilettiğin görselin baskın renklerini ve renk paletini çıkarabilirim.
+- Ataçla bir görsel ekle veya görseli buraya sürükle sonra da "renk" yaz.
 
-+ ocr [*]
-- OCR yapabilmem için bir görsel iletmelisin.
++ [*] ocr [*]
+- OCR yapabilmem için bir görsel iletmelisin. Sonra "ocr" veya "ocr yap" falan diyebilirsin.
+- Bana bir görsel iletip sonra "ocr" yazarsan OCR yapabilirim.
+- Ataçla bir görsel ekle veya bu alana sürükleyip bırak sonra OCR yazarsan sana metin olarak iletebilirim.
 
 + [*] (yeteneklerin|yeteneklere|becerilerin|yapabilirsin) [*]
 - Görsel iletirsen OCR yapabilirim.
 - Matematik işlemlerine hakimim.
 - Görselden renk paleti çıkarabilirim.
-- Çat-pat Türkçe biliyorum.
 - İp adresini söyleyebilirim.
 - İstediğin şehirin hava durumuna bakabilirim.
 
