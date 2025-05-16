@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     });
 
+    
+
     bot.setSubroutine('ipaddress', async function(rs, args) {
         try {
             const response = await fetch('https://api.ipify.org?format=json');
