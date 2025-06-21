@@ -17,6 +17,11 @@
       background: #fff;
       border-radius: 8px;
       margin-bottom: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #dropZone:hover {
+      background: #e6e6e6;
     }
     .pair {
       background: #fff;
@@ -28,7 +33,7 @@
       flex-direction: column;
       gap: 6px;
     }
-    input {
+    input[type="text"] {
       width: 100%;
       box-sizing: border-box;
       padding: 10px;
@@ -40,35 +45,52 @@
       padding: 10px 20px;
       font-size: 14px;
       margin-top: 20px;
+      text-align: center;
     }
     #filenameDisplay {
       margin-bottom: 10px;
       font-weight: bold;
     }
+    #fileInput {
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-<h2>JSONL Dosya Denetleyici</h2>
-
-<div id="dropZone">.jsonl dosyasını sürükleyip bırak</div>
+<div id="dropZone">📂 drag and drop jsonl or click</div>
+<input type="file" id="fileInput" accept=".jsonl">
 <div id="filenameDisplay"></div>
 <div id="editArea"></div>
-<button onclick="saveFile()">💾 Kaydet</button>
+<button onclick="saveFile()">save</button>
 
 <script>
   let originalFilename = "output.jsonl";
 
-  document.getElementById("dropZone").addEventListener("dragover", e => {
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
   });
 
-  document.getElementById("dropZone").addEventListener("drop", e => {
+  dropZone.addEventListener("drop", e => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener("change", e => {
+    if (e.target.files.length > 0) {
+      handleFile(e.target.files[0]);
+    }
+  });
+
+  function handleFile(file) {
     if (!file.name.endsWith(".jsonl")) {
-      alert("Lütfen bir .jsonl dosyası bırakın.");
+      alert("Lütfen bir .jsonl dosyası seçin.");
       return;
     }
 
@@ -106,7 +128,7 @@
       });
     };
     reader.readAsText(file);
-  });
+  }
 
   function saveFile() {
     const inputs = document.querySelectorAll(".input-box");
