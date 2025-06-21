@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f2f2f2;
+      max-width: 700px;
+      margin: auto;
+    }
+    #dropZone {
+      border: 2px dashed #888;
+      padding: 30px;
+      text-align: center;
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .pair {
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    #filenameDisplay {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h2>JSONL Dosya Denetleyici</h2>
+
+<div id="dropZone">.jsonl dosyasını sürükleyip bırak</div>
+<div id="filenameDisplay"></div>
+<div id="editArea"></div>
+<button onclick="saveFile()">💾 Kaydet</button>
+
+<script>
+  let originalFilename = "output.jsonl";
+
+  document.getElementById("dropZone").addEventListener("dragover", e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  document.getElementById("dropZone").addEventListener("drop", e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file.name.endsWith(".jsonl")) {
+      alert("Lütfen bir .jsonl dosyası bırakın.");
+      return;
+    }
+
+    originalFilename = file.name;
+    document.getElementById("filenameDisplay").textContent = `${originalFilename}`;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const lines = event.target.result.trim().split("\n");
+      const area = document.getElementById("editArea");
+      area.innerHTML = "";
+
+      lines.forEach((line, index) => {
+        try {
+          const json = JSON.parse(line);
+          const div = document.createElement("div");
+          div.className = "pair";
+          div.innerHTML = `
+            <input type="text" value="${json.input.replace(/"/g, '&quot;')}" class="input-box" placeholder="input">
+            <input type="text" value="${json.output.replace(/"/g, '&quot;')}" class="output-box" placeholder="output">
+          `;
+          area.appendChild(div);
+        } catch (err) {
+          console.warn("Satır hatalı:", line);
+        }
+      });
+
+      document.querySelectorAll("input").forEach((el, i, all) => {
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (i + 1 < all.length) all[i + 1].focus();
+          }
+        });
+      });
+    };
+    reader.readAsText(file);
+  });
+
+  function saveFile() {
+    const inputs = document.querySelectorAll(".input-box");
+    const outputs = document.querySelectorAll(".output-box");
+    const result = [];
+
+    for (let i = 0; i < inputs.length; i++) {
+      const inputVal = inputs[i].value.trim();
+      const outputVal = outputs[i].value.trim();
+
+      if (inputVal.startsWith("@")) {
+        result.push(`@{"input":"${inputVal.slice(1)}","output":"${outputVal}"}`);
+      } else {
+        result.push(`{"input":"${inputVal}","output":"${outputVal}"}`);
+      }
+    }
+
+    const blob = new Blob([result.join("\n")], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = originalFilename;
+    link.click();
+  }
+</script>
+
+</body>
+</html>
