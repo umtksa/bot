@@ -38,19 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${hex};margin-right:8px;vertical-align:middle;"></span>`;
     }
 
-    bot.setSubroutine('weatherfunction', async function(rs, args) {
-        let city = (args && args.length > 0) ? args.join(" ") : "";
-        city = city.trim().replace(/\s+/g, "+");
-        if (!city) return "Şehir adı belirtmelisin.";
-        try {
-            const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=3`);
-            if (!response.ok) return "Hava durumu alınamadı.";
-            const text = await response.text();
-            return text;
-        } catch (e) {
-            return "Hava durumu alınırken bir hata oluştu.";
-        }
-    });
 
     bot.setSubroutine('ipaddress', async function(rs, args) {
         try {

@@ -1,5 +1,6 @@
-+ * (hava durumu|havadurumu|hava nasıl) [*]
-- <call>weatherfunction <star></call>
+! version = 2.0
+! global utf8 = true
+
 
 + [*] (tarih|tarihi|bugün) [*]
 - <call>datefunction</call>
@@ -7,6 +8,6 @@
 + [*] saat [*]
 - <call>timefunction</call>
 
-+ * ip *
++ ip [adresim|numaram|adresimi] [*]
 - <call>ipaddress</call>
 
