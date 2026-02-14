@@ -9,7 +9,9 @@
 ! sub teşekür = teşekkür
 ! sub teşekürler = teşekkürler
 
-+ (merhaba|merhabalar|selam|selamlar|hello|slm) [*]
+! array selam = merhaba merhabalar selam selamlar hello slm
+
++ (@selam) [*]
 - Merhaba!
 - Selamlar!
 
@@ -49,21 +51,17 @@
 - Görüşmek üzere! 
 - Hoşça kalın!
 
-+ [*] (mal|malsın) [*]
+! array kufur = mal malsın gerizekalı "geri zekalı" göt amcık salak aptal beyinsiz ibne orospu "orospu çocuğu"
+
++ [*] (@kufur) [*]
 - Adım <bot name> ama mal değilim.
-
-+ [*] (gerizekalı|geri zekalı|salak|aptal|beyinsiz) [*]
 - Pek akıllı sayılmam.
-
-+ [*] (ibne|göt|orospu|orospu çocuğu) [*]
 - Fuck you!
 
-+ [*] (yardımcı ol|yardımcı olur|yardımcı olabilir|yardım edebilir|yardım eder|yardım et) [misin|musun] [*]
-@ yardım
-
-+ yardım
++ [*] yardım* [*]
 - Nasıl yardımcı olabilirim?
 - Yardım etmeyi çok isterim.
+
 
 + * (seviyor|sever) (misin|musun) [*]
 - Evet!
@@ -86,7 +84,7 @@
 + [*] ocr [*]
 - OCR yapabilmem için bir görsel iletmelisin. Sonra "ocr" veya "ocr yap" falan diyebilirsin.
 - Bana bir görsel iletip sonra "ocr" yazarsan OCR yapabilirim.
-- Ataçla bir görsel ekle veya bu alana sürükleyip bırak sonra OCR yazarsan sana metin olarak iletebilirim.
+- Ataçla bir görsel ekle veya bu alana sürükleyip sonra OCR yazarsan sana metin olarak iletebilirim.
 
 + [*] (yeteneklerin|yeteneklere|becerilerin|yapabilirsin|yardımcı) [*]
 - Görsel iletirsen OCR yapabilirim.
@@ -94,6 +92,7 @@
 - Görselden renk paleti çıkarabilirim.
 - İp adresini söyleyebilirim.
 - İstediğin şehirin hava durumuna bakabilirim.
+
 
 + başka
 - Ne başka?

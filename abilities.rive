@@ -7,6 +7,6 @@
 + [*] saat [*]
 - <call>timefunction</call>
 
-+ ip [adresim|numaram|adresimi] [*]
++ * ip *
 - <call>ipaddress</call>
 
