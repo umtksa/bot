@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadBot() {
         try {
-            await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive', 'abilities.rive']);
+            await bot.loadFile(['ahraz.rive', 'genel.rive', 'plaka.rive', 'abilities.rive', 'tebrik.rive']);
             bot.sortReplies();
-            addBotMessage("Merhaba! Ben Ahraz. Matematik, ip adresi, tarih, saat, plaka kodları, ior değerleri, OCR, renk analizi ve mockup gibi yeteneklerim var.");
-            console.log("Bot başarıyla yüklendi ve hazır. Dosyalar: ahraz.rive, genel.rive, plaka.rive");
+            addBotMessage("Merhaba! Ben Ahraz.");
+            console.log("Bot başarıyla yüklendi ve hazır. Dosyalar: ahraz.rive, genel.rive, plaka.rive, tebrik.rive");
         } catch (error) {
             console.error("Bot yüklenirken hata oluştu:", error);
             addBotMessage("Üzgünüm, şu an hizmet veremiyorum. Bot yüklenemedi.");
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         addUserMessage(`${file.name}`);
         lastUploadedImageFile = file;
-        addBotMessage("OCR, renk analizi veya mockup yapabilirim. Lütfen 'ocr', 'renk' veya 'mockup' yaz.");
+        addBotMessage("OCR veya renk analizi yapabilirim. Lütfen 'ocr' veya 'renk' yaz.");
         fileInput.value = '';
         userInput.focus(); 
     });
@@ -205,74 +205,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 addUserMessage(`${file.name}`);
                 lastUploadedImageFile = file;
-                addBotMessage("OCR, renk analizi veya mockup yapabilirim. Lütfen 'ocr', 'renk' veya 'mockup' yaz.");
+                addBotMessage("OCR veya renk analizi yapabilirim. Lütfen 'ocr' veya 'renk' yaz.");
             }
         });
-    }
-
-    // MOCKUP fonksiyonu
-    function applyMockup(cardFile, callback) {
-        const baseImg = new Image();
-        baseImg.src = 'base.jpg';
-        baseImg.onload = () => {
-            const cardImg = new Image();
-            cardImg.src = URL.createObjectURL(cardFile);
-            cardImg.onload = () => {
-                try {
-                    let baseMat = cv.imread(baseImg);
-                    let baseMat2x = new cv.Mat();
-                    cv.resize(baseMat, baseMat2x, new cv.Size(baseMat.cols * 2, baseMat.rows * 2), 0, 0, cv.INTER_CUBIC);
-
-                    let cardMat = cv.imread(cardImg);
-
-                    // mockup.html'deki koordinatlar
-                    const dstCoords = [1355, 1897, 3388, 929, 4201, 2090, 2134, 3140];
-                    const h = cardMat.rows, w = cardMat.cols;
-                    const srcPts = cv.matFromArray(4, 1, cv.CV_32FC2, [0,0, w,0, w,h, 0,h]);
-                    const dstPts = cv.matFromArray(4, 1, cv.CV_32FC2, dstCoords);
-
-                    // Perspektif dönüşüm
-                    const M = cv.getPerspectiveTransform(srcPts, dstPts);
-                    const warped = new cv.Mat();
-                    cv.warpPerspective(cardMat, warped, M, new cv.Size(baseMat2x.cols, baseMat2x.rows));
-
-                    // Maskeleme
-                    const gray = new cv.Mat();
-                    cv.cvtColor(warped, gray, cv.COLOR_RGBA2GRAY);
-                    const mask = new cv.Mat();
-                    cv.threshold(gray, mask, 1, 255, cv.THRESH_BINARY);
-                    const maskInv = new cv.Mat();
-                    cv.bitwise_not(mask, maskInv);
-
-                    const bg = new cv.Mat();
-                    const fg = new cv.Mat();
-                    cv.bitwise_and(baseMat2x, baseMat2x, bg, maskInv);
-                    cv.bitwise_and(warped, warped, fg, mask);
-
-                    const finalMat = new cv.Mat();
-                    cv.add(bg, fg, finalMat);
-
-                    // Sonucu tekrar küçült
-                    const finalSmall = new cv.Mat();
-                    cv.resize(finalMat, finalSmall, new cv.Size(baseMat.cols, baseMat.rows), 0, 0, cv.INTER_AREA);
-
-                    // Sonucu canvas'a çiz ve dataURL olarak callback ile döndür
-                    const canvas = document.createElement('canvas');
-                    canvas.width = baseMat.cols;
-                    canvas.height = baseMat.rows;
-                    cv.imshow(canvas, finalSmall);
-
-                    // Temizlik
-                    [baseMat, baseMat2x, cardMat, srcPts, dstPts, M, warped, gray, mask, maskInv, bg, fg, finalMat, finalSmall].forEach(m => m.delete());
-
-                    callback(canvas.toDataURL('image/jpeg'));
-                } catch (err) {
-                    callback(null);
-                }
-            };
-            cardImg.onerror = () => callback(null);
-        };
-        baseImg.onerror = () => callback(null);
     }
 
     // Kullanıcıdan gelen mesajı kontrol et
@@ -333,24 +268,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = URL.createObjectURL(lastUploadedImageFile);
                 lastUploadedImageFile = null;
                 return;
-            } else if (choice.includes('mockup')) {
-                //addBotMessage("Mockup hazırlanıyor...");
-                if (typeof cv === 'undefined' || !cv.imread) {
-                    addBotMessage("OpenCV.js henüz yüklenmedi veya desteklenmiyor.");
-                    lastUploadedImageFile = null;
-                    return;
-                }
-                applyMockup(lastUploadedImageFile, (dataUrl) => {
-                    if (dataUrl) {
-                        addBotHtmlMessage(`<img src="${dataUrl}" style="max-width:100%;border-radius:8px;" alt="Mockup Sonucu"/>`);
-                    } else {
-                        addBotMessage("Mockup işlemi sırasında hata oluştu.");
-                    }
-                });
-                lastUploadedImageFile = null;
-                return;
             }
-            addBotMessage("Lütfen 'ocr', 'renk' veya 'mockup' yazarak ne yapmak istediğinizi belirtin.");
+            addBotMessage("Lütfen 'ocr' veya 'renk' yazarak ne yapmak istediğinizi belirtin.");
             return;
         }
 
