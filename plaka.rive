@@ -1,6 +1,3 @@
-! version = 2.0
-! global utf8 = true
-
 > object plaka javascript
     var iller = {
         "adana": "01", "adıyaman": "02", "afyon": "03", "ağrı": "04",
@@ -26,19 +23,27 @@
         "osmaniye": "80", "düzce": "81"
     };
 
+    function ekSoy(k) {
+        // Önce apostrof varsa temizle: ankara'nın → ankaranın
+        k = k.replace(/['''`´].*$/, "");
+        // Türkçe iyelik/hal eklerini soy (uzundan kısaya doğru dene)
+        var ekler = ["ndan","nden","ndaki","daki","deki","nın","nin","nun","nün",
+                     "ının","inin","unun","ünün","dan","den","yla","yle",
+                     "da","de","na","ne","ya","ye","ın","in","un","ün","nı","ni","yu","yü"];
+        for (var i = 0; i < ekler.length; i++) {
+            if (k.endsWith(ekler[i]) && k.length - ekler[i].length >= 3) {
+                return k.slice(0, k.length - ekler[i].length);
+            }
+        }
+        return k;
+    }
+
     var kelimeler = args[0].toLowerCase().split(" ");
     for (var i = 0; i < kelimeler.length; i++) {
-        var k = kelimeler[i].replace(/[''']/g, "'")
-                             .replace(/'(nın|nin|nun|nün|ın|in|un|ün)$/i, "");
+        var k = ekSoy(kelimeler[i]);
         if (iller[k]) {
             return k.charAt(0).toUpperCase() + k.slice(1) + "'nın plaka kodu " + iller[k] + "'dir.";
         }
     }
     return "Hangi ilin plaka kodunu öğrenmek istiyorsunuz?";
 < object
-
-+ [*] (plaka|plakası) [numarası|kodu] [*]
-- <call>plaka <star></call>
-
-+ [*] _ plaka [*]
-- <call>plaka <star></call>
